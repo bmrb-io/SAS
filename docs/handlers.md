@@ -31,7 +31,7 @@ The callbacks themselves are of course different since STAR is not XML.
 
 There are different versions of ``ContentHandler`` (and corresponding parsers) for different
 usage patterns. The handlers define separate star/end callbacks for each STAR element, unlike
-SAX's more geenric ``startElement()/endElement()``. Because some STAR elements don't have an
+SAX's more generic ``startElement()/endElement()``. Because some STAR elements don't have an
 explicit terminator, the ``end...`` callbacks may be "faked" by the parser, or not called at
 all: refer to the documentation for the specific parser.
 
@@ -44,9 +44,20 @@ Global blocks are underdefined in STAR and are not used in either mmCIF or NMR-S
 blocks have no explicit terminator so a parser will have to "fake" ``endGlobal()`` or never
 trigger it.
 
-  * ``startData( line, name )``: called when parser encounters ``data_*name*``
+  * ``startData( line, name )``: called when parser encounters ``data_``*name*
   * ``endData( line, name )``: STAR data blocks have no explicit terminator. NMR-STAR and
    mmCIF both use only one data block per file so this is typically called on EOF.
+  * ``startSaveframe( line, name )``: called when parser encounters ``save_``*name*
+  * ``endSaveframe( line, name )``: called when parser encounters ``save_``
+  * ``startLoop( line )``: called when parser encounters ``loop_``
+  * ``endLoop( line )``: NMR-STAR uses explicit ``stop_`` terminators for top-level loops,
+   mmCIF does not. NMR-STAR parsers call this on ``stop_`` whereas mmCIF parser in this 
+   package "fakes" it and calls this before the ``start...`` of the next element or ``endData()``.
+  * ``comment( line, text )``: the parsers do not ignore comments, it's up to you to decide
+   whether you want to keep them or not.
 
 ###SasContentHandler
 
+###ContentHandler
+
+###ContentHandler2
