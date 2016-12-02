@@ -10,8 +10,8 @@ Self-describing Text Archive and Retrieval (**STAR**) format references:
   * [DOI: 10.1021/ci300074v](http://pubs.acs.org/doi/full/10.1021/ci300074v)
   * [DOI: 10.1021/ci300076w](http://pubs.acs.org/doi/10.1021/ci300076w)
 
-**SAS** is modelled after Simple API for XML (**SAX**). 
-[SAX wikipedia articel](https://en.wikipedia.org/wiki/Simple_API_for_XML)
+**SAS** is modelled after Simple API for XML (**SAX**)
+([SAX wikipedia article](https://en.wikipedia.org/wiki/Simple_API_for_XML)).
 See ``docs`` subdirectory for details.
 
 Older versions of this code including implementations in different languages,
