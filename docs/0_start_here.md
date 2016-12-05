@@ -7,21 +7,27 @@ for writing parsers for other variants of STAR: one of the motivations behind it
 was to make it easy to create parsers tailored to specific tasks and/or STAR
 dialects.
 
+Previous iteration of this project includes parser in C++, Java, and PHP and is 
+available from BMRB. Note, however, that it is not actively maintained anymore.
+
+### Python
+
 I've been using python almost exclusively in the last couple of years so only
 python implementation is available as of the time of this writing. The 
 implementation is pure python, based on Dave Beazley's Python Lex-Yacc (PLY).
 Although I currently have no plans to support other programming languages, all
-python code lives in ``python`` subdirectory.
+python code lives in ``python`` subdirectory. The code is python 2: 2.6 and 2.7.
+It has not been tested on earlier versions nor on any 3.x ones.
 
-Previous iteration of this project includes parser in C++, Java, and PHP and is 
-available from BMRB. Note, however, that it is not actively maintained anymore.
+Run ``pydoc ./<filename>.py`` to get API docs. For details on the STAR dialect 
+recognized by a parser, read ``__init__.py`` in the dialect subdirectory.
 
 ## STAR
 
 Because PLY is based on python regular expressions, this code does not strictly
 adhere to STAR character set definitions. For example, STAR defines whitespace
-as U+0020 and U+0009 (ASCII space and tab), but we're using ``\s`` as defined
-in python ``re`` module.
+as U+0020 and U+0009 (ASCII space and tab), but we're using ``\s`` as understood
+by python ``re`` module.
 
 2012 revision of STAR format added python-style quoting of multi-line values
 (triple-quotes) and a few new data types. This code supports triple-quotes
@@ -35,7 +41,7 @@ multi-line values correctly.
 ## Scanner
 
 The core piece is the PLY-based scanner ``lexer.py``. The scanner is an iterable 
-that returns lexical tokens, see its main section for usage examples.
+that returns lexical tokens, see its ``__main__`` section for usage examples.
 
 The scanner can read an ``file`` object with line-based input buffering,
 or you can ``send()`` it chunks of input. 
@@ -60,6 +66,10 @@ simple. Because of that simplicity the parsers here are hand-written and
 should be fairly easy to understand. If existing ones don't do what you need,
 pick one that's closest, make a copy and modify it. Consider a pull request
 once you get it going.
+
+### Handlers
+
+Are documented in a separate file: ``handlers.md``.
 
 ## See also
 
