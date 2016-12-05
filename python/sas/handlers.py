@@ -6,7 +6,7 @@
 # - callbacks can return True to stop the parser.
 # - callbacks must return False to keep the parser going.
 #
-# MOst content handler callbacks below simply raise "Abstract method called".
+# Most content handler callbacks below simply raise "Abstract method called".
 #
 from __future__ import absolute_import
 import sys

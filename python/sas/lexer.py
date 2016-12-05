@@ -19,9 +19,9 @@ The *-ish* above refers to
   * Lack of support for STAR-2012 extensions: triple-quoted values are supported, but lists, tables,
     and ref-tables (references) are not.
 
-The lexer is fastest when you feed it one line at a time. They must be whole lines. (This means that
-if the input is one long line, as STAR doesn't differentiate between newlines and other whitespace
-except around semicolons, scanning is going to be the slowest.)
+The lexer is fastest when you feed it one line at a time. They must be whole lines, or 
+semicolon-delimited values may not be recognized properly. When parsing a ``file`` the scanner
+will buffer lines of input. Setting buffer size to 0 makes it buffer one line at a time.
 
 STAR references:
 
@@ -74,7 +74,7 @@ class StarLexer( object ) :
 
     Methods prefixed with ``t_`` are how PLY defines lexer tokens. Read PLY manual for details.
     """
-    
+
 # lexical states
 
     states = (
@@ -158,6 +158,10 @@ class StarLexer( object ) :
 
 # need lookahead/lookbehind for "\n;", " '", and "' "
 #
+# \s with unicode flag will match [ \t\n\r\f\v] plus unicode spaces. We need to differentiate
+# between space and (system-dependent?) \n for the "\n;". Simple stupid way: define space as
+# a token and ignore it in the parser later.
+#
     # newlines
     #  error
     #
@@ -177,7 +181,8 @@ class StarLexer( object ) :
     #  \s matches \n but NL above should trigger first
     #  however, this will catch "  \n  "
     #  "\n" only really matters in "\n;", that's why we need to separate \n's from \s'es
-    #
+    # this will not match inside quoted values where we don't ignore space
+    # 
     def t_SPACE( self, t ) :
         r"\s+"
         for c in t.value :
