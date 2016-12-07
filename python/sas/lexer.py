@@ -228,7 +228,7 @@ class StarLexer( object ) :
         return t
 
     def t_YYTSINGLE_CHARACTERS( self, t ) :
-        r".+"
+        r"(?:[^']+)|'{1,2}"
         if self._verbose :
             sys.stdout.write( "Line in triple-quotes (%d): |%s|\n" % (t.lexer.lineno,t.value) )
         return t
@@ -322,7 +322,7 @@ class StarLexer( object ) :
         return t
 
     def t_YYTDOUBLE_CHARACTERS( self, t ) :
-        r".+"
+        r'(?:[^"]+)|"{1,2}'
         if self._verbose :
             sys.stdout.write( "Line in triple-double-quotes (%d): |%s|\n" % (t.lexer.lineno,t.value) )
         return t

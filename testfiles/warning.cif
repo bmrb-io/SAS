@@ -1,0 +1,38 @@
+#
+# keyword in value can be due to missing closing delimiter
+# this is only relevant in multi-line values
+#
+# this file ends with "EOF in value" critical error
+#
+# it should not generate warnings for any keywords in single-line values
+#
+
+data_warning
+
+   _Warning.Title
+;
+ global_ is a keyword
+;
+   _Warning.OK           'also save_foo is'
+   _Warning.Also_OK      '''and save_ too'''
+   _Warning.Another_OK   "and loop_ "
+
+   loop_
+      _In_loop.Num
+      _In_loop.Val
+
+      1 "and stop_ "
+      2 '''this 
+should match _tag regexp'''
+
+
+    _Warning.Text """
+multi
+  line
+    value
+      missing
+        closing
+          quote
+
+    _Warning.Not_OK warning
+

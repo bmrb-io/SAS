@@ -121,20 +121,21 @@ class Parser( object ) :
                         if val.endswith( "\n" ) : val = val.rstrip( "\n" )
                         break
 
-                for pat in sas.KEYWORDS :
-                    m = pat.search( token.value.strip() )
-                    if m :
-                        if self._eh.warning( line = token.lineno, msg = "keyword in value: %s" \
-                                % (m.group( 1 ),) ) :
-                            stop = True
+                if not delimiter in ("SINGLESTART","DOUBLESTART") :
+                    for pat in sas.KEYWORDS :
+                        m = pat.search( token.value.strip() )
+                        if m :
+                            if self._eh.warning( line = token.lineno, msg = "keyword in value: %s" \
+                                    % (m.group( 1 ),) ) :
+                                stop = True
 
 # stop on the 1st hit
 #
-                        break
+                            break
                 val += token.value
 
             else :
-                self._eh.fatalError( line = token.lineno, msg = "EOF in delimited value: %s" % (rc,) )
+                self._eh.fatalError( line = token.lineno, msg = "EOF in delimited value" )
                 stop = True
 
         except sas.SasException, e :
@@ -612,7 +613,7 @@ class Ch( sas.ContentHandler ) :
 if __name__ == "__main__" :
 
     e = sas.ErrorHandler()
-    c = Ch( verbose = True )
-    l = sas.StarLexer( fp = sys.stdin, bufsize = 0 ) #, verbose = True )
+    c = Ch( verbose = False )
+    l = sas.StarLexer( fp = sys.stdin, bufsize = 0, verbose = False )
     with sas.timer( "DDL" ) :
         p = Parser.parse( lexer = l, content_handler = c, error_handler = e, verbose = False )

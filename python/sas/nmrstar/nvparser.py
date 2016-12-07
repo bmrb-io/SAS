@@ -55,7 +55,7 @@ class Parser( object ) :
     def parse( cls, lexer, content_handler, error_handler, verbose = False ) :
         """
         Main method
-        
+
         other parameters are the same as for the contructor
 
         returns ``Parser`` instance

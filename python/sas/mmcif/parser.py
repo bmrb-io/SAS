@@ -65,7 +65,7 @@ class CifParser( object ) :
     def parse( cls, lexer, content_handler, error_handler, verbose = False ) :
         """
         Main method
-        
+
         other parameters are the same as for the contructor
 
         returns ``SansParser`` instance
@@ -121,17 +121,18 @@ class CifParser( object ) :
                             val = val.rstrip( "\n" )
                         break
 
-                for pat in sas.KEYWORDS :
-                    m = pat.search( token.value.strip() )
-                    if m :
-                        if self._eh.warning( line = token.lineno, msg = "keyword in value: %s" \
-                                % (m.group( 1 ),) ) :
-                            stop = True
-                        break
+                if not delimiter in ("SINGLESTART","DOUBLESTART") :
+                    for pat in sas.KEYWORDS :
+                        m = pat.search( token.value.strip() )
+                        if m :
+                            if self._eh.warning( line = token.lineno, msg = "keyword in value: %s" \
+                                    % (m.group( 1 ),) ) :
+                                stop = True
+                            break
                 val += token.value
 
             else :
-                self._eh.fatalError( line = token.lineno, msg = "EOF in delimited value: %s" % (rc,) )
+                self._eh.fatalError( line = token.lineno, msg = "EOF in delimited value" )
                 stop = True
 
         except sas.SasException, e :
@@ -256,7 +257,7 @@ class CifParser( object ) :
                 if need_value :
                     self._eh.fatalError( line = token.lineno, msg = "premature EOF, expected value" )
                     return True
-                    
+
                     self._ch.endData( line = token.lineno, name = self._data_name )
                     return True
 
@@ -346,7 +347,7 @@ class CifParser( object ) :
                     tag_idx += 1
                     if tag_idx >= len( tags ) :
                         tag_idx = 0
-                    
+
                     if self._ch.data( tag = tags[tag_idx][0], tagline = tags[tag_idx][1], val = token.value,
                             valline = token.lineno, delim = sas.TOKENS[token.type], inloop = True ) :
                         return True
@@ -386,7 +387,7 @@ class CifParser( object ) :
                         return True
                 if numvals < 1 :
                     if self._eh.error( line = token.lineno, msg = "Loop with no values" ) :
-                        return True                           
+                        return True
                 if (numvals % len( tags )) != 0 :
                     if self._eh.error( line = token.lineno, msg = "Loop count error" ) :
                         return True
@@ -431,7 +432,7 @@ class Ch( sas.ContentHandler ) :
 if __name__ == "__main__" :
 
     e = sas.ErrorHandler()
-    c = Ch( verbose = True )
-    l = sas.StarLexer( fp = sys.stdin, bufsize = 0 ) #, verbose = True )
+    c = Ch( verbose = False )
+    l = sas.StarLexer( fp = sys.stdin, bufsize = 0, verbose = False )
     with sas.timer( "CIF" ) :
         p = CifParser.parse( lexer = l, content_handler = c, error_handler = e, verbose = False )
