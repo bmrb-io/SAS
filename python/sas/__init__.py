@@ -69,7 +69,7 @@ TOKENS = {
 
 #
 __all__ = ["TOKENS", "KEYWORDS", "SasException",
-    "Starlexer",
+    "StarLexer",
     "ErrorHandler", "ContentHandler", "ContentHandler2", "SasContentHandler",
     "SasParser", "SansParser", "SansParser2",
     "CifParser",
