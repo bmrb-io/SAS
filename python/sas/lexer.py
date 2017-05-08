@@ -480,7 +480,7 @@ class StarLexer( object ) :
     def t_GLOBALSTART( self, t ) :
         r"[Gg][Ll][Oo][Bb][Aa][Ll]_"
         if self._verbose :
-            sys.stdout.write( "Start global block in line %d\n" % (t.lexer.lineno,) )
+            sys.stdout.write( "%s: Start global block in line %d\n" % (self.__class__.__name__,t.lexer.lineno,) )
         return t
 
     # strip "data_"
@@ -488,7 +488,7 @@ class StarLexer( object ) :
     def t_DATASTART( self, t ) :
         r"[Dd][Aa][Tt][Aa]_\S+"
         if self._verbose :
-            sys.stdout.write( "Start data |%s| in line %d\n" % (t.value,t.lexer.lineno,) )
+            sys.stdout.write( "%s: Start data |%s| in line %d\n" % (self.__class__.__name__,t.value,t.lexer.lineno,) )
         t.value = t.value[5:]
         return t
 
@@ -497,7 +497,7 @@ class StarLexer( object ) :
     def t_SAVESTART( self, t ) :
         r"save_\S+"
         if self._verbose :
-            sys.stdout.write( "Start saveframe |%s| in line %d\n" % (t.value,t.lexer.lineno,) )
+            sys.stdout.write( "%s: Start saveframe |%s| in line %d\n" % (self.__class__.__name__,t.value,t.lexer.lineno,) )
         t.value = t.value[5:]
         return t
 
@@ -506,7 +506,7 @@ class StarLexer( object ) :
     def t_SAVEEND( self, t ) :
         r"save_"
         if self._verbose :
-            sys.stdout.write( "End saveframe in line %d\n" % (t.lexer.lineno,) )
+            sys.stdout.write( "%s: End saveframe in line %d\n" % (self.__class__.__name__,t.lexer.lineno,) )
         return t
 
     #
@@ -514,7 +514,7 @@ class StarLexer( object ) :
     def t_LOOPSTART( self, t ) :
         r"loop_"
         if self._verbose :
-            sys.stdout.write( "Start loop in line %d\n" % (t.lexer.lineno,) )
+            sys.stdout.write( "%s: Start loop in line %d\n" % (self.__class__.__name__,t.lexer.lineno,) )
         return t
 
     #
@@ -522,7 +522,7 @@ class StarLexer( object ) :
     def t_STOP( self, t ) :
         r"stop_"
         if self._verbose :
-            sys.stdout.write( "End loop in line %d\n" % (t.lexer.lineno,) )
+            sys.stdout.write( "%s: End loop in line %d\n" % (self.__class__.__name__,t.lexer.lineno,) )
         return t
 
 #######################################################
@@ -543,7 +543,7 @@ class StarLexer( object ) :
     def t_TAGNAME( self, t ) :
         r"_\S+"
         if self._verbose :
-            sys.stdout.write( "Tag in line %d: |%s|\n" % (t.lexer.lineno,t.value) )
+            sys.stdout.write( "%s: Tag in line %d: |%s|\n" % (self.__class__.__name__,t.lexer.lineno,t.value) )
         return t
 
 #######################################################
@@ -552,9 +552,9 @@ class StarLexer( object ) :
     # strip leading '$'
     #
     def t_FRAMECODE( self, t ) :
-        r"$\S+"
+        r"\$\S+"
         if self._verbose :
-            sys.stdout.write( "Framecode value in line %d: |%s|\n" % (t.lexer.lineno,t.value) )
+            sys.stdout.write( "%s: Framecode value in line %d: |%s|\n" % (self.__class__.__name__,t.lexer.lineno,t.value) )
         t.value = t.value.lstrip( "$" )
         return t
 
@@ -563,7 +563,12 @@ class StarLexer( object ) :
     def t_CHARACTERS( self, t ) :
         r"\S+"
         if self._verbose :
-            sys.stdout.write( "Bareword value in line %d: |%s|\n" % (t.lexer.lineno,t.value) )
+            sys.stdout.write( "%s: Bareword value in line %d: |%s|\n" % (self.__class__.__name__,t.lexer.lineno,t.value) )
+
+# not sure if I want to do this:
+#
+#        if t == "_" :
+#            raise sas.SasException( line = t.lexer.lineno, msg = "value is unquoted underscore" )
         return t
 
     def t_error( self, v ) :

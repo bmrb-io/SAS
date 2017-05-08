@@ -29,6 +29,9 @@ adhere to STAR character set definitions. For example, STAR defines whitespace
 as U+0020 and U+0009 (ASCII space and tab), but we're using ``\s`` as understood
 by python ``re`` module.
 
+It's not clear whether a stand-along unquoted underscore is a legal STAR value.
+In this lexer it is.
+
 2012 revision of STAR format added python-style quoting of multi-line values
 (triple-quotes) and a few new data types. This code supports triple-quotes
 but not the new types.

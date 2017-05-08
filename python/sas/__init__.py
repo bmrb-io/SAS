@@ -41,14 +41,14 @@ from .ddl import DdlParser
 # (use group for warnings: "keyword group(1) in value".)
 #
 import re
-KEYWORDS = {
+KEYWORDS = (
     re.compile( r"(?:^|\s)(global_)\s*.*$", re.IGNORECASE ),
     re.compile( r"(?:^|\s)(data_\w+)\s*.*$", re.IGNORECASE ),
     re.compile( r"(?:^|\s)(save_[^\s]*)\s*.*$", re.IGNORECASE ),
     re.compile( r"(?:^|\s)(loop_)\s*.*$", re.IGNORECASE ),
     re.compile( r"(?:^|\s)(stop_)\s*.*$", re.IGNORECASE ),
     re.compile( r"(?:^|\s)(_\w[^\s]*)\s*.*$", re.IGNORECASE )
-}
+)
 
 # value delimiter map: PLY token to what's passed by ``ContentHandler`` callback
 #
