@@ -4,7 +4,7 @@ from __future__ import absolute_import
 
 import sys
 import os
-import pprint
+#import pprint
 
 _UP = os.path.join( os.path.split( __file__ )[0], "../.." )
 sys.path.append( os.path.realpath( _UP ) )
@@ -98,7 +98,10 @@ class Parser( object ) :
                     return
 
             else :
-                self._ch.endData( line = token.lineno, name = self._data_name )
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
+                self._ch.endData( line = ln, name = self._data_name )
                 return
 
         except sas.SasException, e :
@@ -137,7 +140,10 @@ class Parser( object ) :
                     return True
 
             else :
-                self._ch.endData( line = token.lineno, name = self._data_name )
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
+                self._ch.endData( line = ln, name = self._data_name )
                 return True
 
         except sas.SasException, e :
@@ -201,7 +207,10 @@ class Parser( object ) :
                 val += token.value
 
             else :
-                self._eh.fatalError( line = token.lineno, msg = "EOF in delimited value" )
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
+                self._eh.fatalError( line = ln, msg = "EOF in delimited value" )
                 stop = True
 
         except sas.SasException, e :
@@ -289,11 +298,14 @@ class Parser( object ) :
                     return True
 
             else :
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
                 if need_value :
-                    self._eh.fatalError( line = token.lineno, msg = "EOF in saveframe: %s (expected value)" \
+                    self._eh.fatalError( line = ln, msg = "EOF in saveframe: %s (expected value)" \
                         % (name,) )
                     return True
-                self._eh.fatalError( line = token.lineno, msg = "EOF in saveframe: %s (no closing save_)" % (name,) )
+                self._eh.fatalError( line = ln, msg = "EOF in saveframe: %s (no closing save_)" % (name,) )
                 return True
 
         except sas.SasException, e :
@@ -381,17 +393,20 @@ class Parser( object ) :
                     return True
 
             else :
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
                 if numtags < 1 :
-                    self._eh.fatalRrror( line = token.lineno, msg = "EOF in loop (no tags)" )
+                    self._eh.fatalRrror( line = ln, msg = "EOF in loop (no tags)" )
                     return True
                 if numvals < 1 :
-                    self._eh.fatalError( line = token.lineno, msg = "EOF in loop (no values)" )
+                    self._eh.fatalError( line = ln, msg = "EOF in loop (no values)" )
                     return True
 
                 if (numvals % numtags ) != 0 :
-                    self._eh.error( line = token.lineno, msg = "Loop count error" )
-               
-                self._eh.fatalError( line = token.lineno, msg = "EOF in loop (no closing stop_)" )
+                    self._eh.error( line = ln, msg = "Loop count error" )
+
+                self._eh.fatalError( line = ln, msg = "EOF in loop (no closing stop_)" )
                 return True
 
         except sas.SasException, e :

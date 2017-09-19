@@ -5,7 +5,7 @@ from __future__ import absolute_import
 
 import sys
 import os
-import pprint
+#import pprint
 
 _UP = os.path.join( os.path.split( __file__ )[0], "../.." )
 sys.path.append( os.path.realpath( _UP ) )
@@ -135,7 +135,10 @@ class Parser( object ) :
                 val += token.value
 
             else :
-                self._eh.fatalError( line = token.lineno, msg = "EOF in delimited value" )
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
+                self._eh.fatalError( line = ln, msg = "EOF in delimited value" )
                 stop = True
 
         except sas.SasException, e :
@@ -175,6 +178,12 @@ class Parser( object ) :
                 if self._eh.error( line = token.lineno, msg = "invalid token at file level: %s : %s" \
                         % (token.type, token.value,) ) :
                     return
+            else :
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
+                self._ch.endData( line = ln, name = self._data_name )
+
 
         except sas.SasException, e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
@@ -284,10 +293,13 @@ class Parser( object ) :
                     return True
 
             else :
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
                 if need_value :
-                    self._eh.fatalError( line = token.lineno, msg = "premature EOF, expected value" )
+                    self._eh.fatalError( line = ln, msg = "premature EOF, expected value" )
                     return True
-                self._ch.endData( line = token.lineno, name = self._data_name )
+                self._ch.endData( line = ln, name = self._data_name )
                 return True
 
         except sas.SasException, e :
@@ -379,10 +391,13 @@ class Parser( object ) :
                     return True
 
             else :
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
                 if need_value :
-                    self._eh.fatalError( line = token.lineno, msg = "premature EOF, expected value" )
+                    self._eh.fatalError( line = ln, msg = "premature EOF, expected value" )
                     return True
-                self._eh.fatalError( line = token.lineno, msg = "premature EOF (no closing save_)" )
+                self._eh.fatalError( line = ln, msg = "premature EOF (no closing save_)" )
                 return True
 
         except sas.SasException, e :
@@ -548,27 +563,30 @@ class Parser( object ) :
                     return True
 
             else :
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
                 if len( tags ) < 1 :
-                    if self._eh.error( line = token.lineno, msg = "Loop with no tags" ) :
+                    if self._eh.error( line = ln, msg = "Loop with no tags" ) :
                         return True
                 if numvals < 1 :
-                    if self._eh.error( line = token.lineno, msg = "Loop with no values" ) :
+                    if self._eh.error( line = ln, msg = "Loop with no values" ) :
                         return True
                 if (numvals % len( tags )) != 0 :
-                    if self._eh.error( line = token.lineno, msg = "Loop count error" ) :
+                    if self._eh.error( line = ln, msg = "Loop count error" ) :
                         return True
-                if self._ch.endLoop( line = token.lineno ) :
+                if self._ch.endLoop( line = ln ) :
                     return True
 
 # we may be in a saveframe
 #
                 if self._save_name != "__UNNAMED__" :
-                    self._eh.fatalError(  line = token.lineno, msg = "Premature EOF (no closing save_)" )
+                    self._eh.fatalError(  line = ln, msg = "Premature EOF (no closing save_)" )
                     return True
 
 # or not
 #
-                self._ch.endData( line = token.lineno, name = self._data_name )
+                self._ch.endData( line = ln, name = self._data_name )
                 return True
 
         except sas.SasException, e :

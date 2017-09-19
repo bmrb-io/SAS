@@ -4,7 +4,7 @@ from __future__ import absolute_import
 
 import sys
 import os
-import pprint
+#import pprint
 
 _UP = os.path.join( os.path.split( __file__ )[0], "../.." )
 sys.path.append( os.path.realpath( _UP ) )
@@ -77,7 +77,7 @@ class SasParser( object ) :
 
         try :
             for token in self._lexer :
- 
+
                 if token.type in ("NL", "SPACE" ) : continue
 
                 if token.type == "COMMENT" :
@@ -98,7 +98,10 @@ class SasParser( object ) :
                     return
 
             else :
-                self._ch.endData( line = token.lineno, name = self._data_name )
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
+                self._ch.endData( line = ln, name = self._data_name )
 
         except sas.SasException, e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
@@ -136,7 +139,10 @@ class SasParser( object ) :
                     return True
 
             else :
-                self._ch.endData( line = token.lineno, name = self._data_name )
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
+                self._ch.endData( line = ln, name = self._data_name )
                 return True
 
             return False
@@ -248,7 +254,7 @@ class SasParser( object ) :
 
                     continue
 
-                if token.type in ("SINGLESTART","TSINGLESTART","DOUBLESTART","TDOUBLESTART","SEMISTART") :                        
+                if token.type in ("SINGLESTART","TSINGLESTART","DOUBLESTART","TDOUBLESTART","SEMISTART") :
                     if not need_value :
                         if self._eh.error( line = token.lineno, msg = "value not expected here (found delimiter %s)" \
                                 % (sas.TOKENS[token.type],) ) :
@@ -285,12 +291,15 @@ class SasParser( object ) :
                     return True
 
             else :
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
                 if last_delimiter is not None :
-                    self._eh.fatalError( line = token.lineno, msg = "EOF in value: no closing `%s`" \
+                    self._eh.fatalError( line = ln, msg = "EOF in value: no closing `%s`" \
                             % (last_delimiter,) )
                     return True
 
-                self._eh.fatalError( line = token.lineno, msg = "EOF in saveframe: %s (no closing save_)" % (name,) )
+                self._eh.fatalError( line = ln, msg = "EOF in saveframe: %s (no closing save_)" % (name,) )
                 return True
 
         except sas.SasException, e :
@@ -361,7 +370,7 @@ class SasParser( object ) :
                     if last_delimiter is None :
                         if self._ch.startValue( line = token.lineno, delim = None ) :
                             return True
-                            
+
                     if self._ch.characters( line = token.lineno, val = token.value ) :
                         return True
 
@@ -381,7 +390,7 @@ class SasParser( object ) :
 
                     if self._ch.startValue( line = token.lineno, delim = sas.TOKENS[token.type] ) :
                         return True
-                            
+
                     if self._ch.characters( line = token.lineno, val = token.value ) :
                         return True
 
@@ -392,7 +401,7 @@ class SasParser( object ) :
 
                     continue
 
-                if token.type in ("SINGLESTART","TSINGLESTART","DOUBLESTART","TDOUBLESTART","SEMISTART") :                        
+                if token.type in ("SINGLESTART","TSINGLESTART","DOUBLESTART","TDOUBLESTART","SEMISTART") :
                     if need_tag :
                         need_tag = False
                     if numtags < 1 :
@@ -403,14 +412,14 @@ class SasParser( object ) :
                         if self._eh.error( line = token.lineno, msg = "found opening %s inside quoted value" \
                                 % (sas.TOKENS[token.type],) ) :
                             return True
-                            
+
                     last_delimiter = sas.TOKENS[token.type]
                     if self._ch.startValue( line = token.lineno, delim = last_delimiter ) :
                         return True
 
                     continue
 
-                if token.type in ("SINGLEEND","TSINGLEEND","DOUBLEEND","TDOUBLEEND","SEMIEND") :                        
+                if token.type in ("SINGLEEND","TSINGLEEND","DOUBLEEND","TDOUBLEEND","SEMIEND") :
                     if need_tag :
                         need_tag = False
                     if numtags < 1 :
@@ -437,12 +446,15 @@ class SasParser( object ) :
                     return True
 
             else :
+                ln = -1
+                if "token" in locals() :
+                    ln = token.lineno
                 if last_delimiter is not None :
-                    self._eh.fatalError( line = token.lineno, msg = "EOF in value: no closing `%s`" \
+                    self._eh.fatalError( line = ln, msg = "EOF in value: no closing `%s`" \
                             % (last_delimiter,) )
                     return True
 
-                self._eh.fatalError( line = token.lineno, msg = "EOF in loop (no closing stop_)" )
+                self._eh.fatalError( line = ln, msg = "EOF in loop (no closing stop_)" )
                 return True
 
         except sas.SasException, e :
