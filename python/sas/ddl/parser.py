@@ -15,7 +15,7 @@ import sas
 # loop terminators are implicit, so the parser "fakes" endLoop()s. There are multiple data blocks, too,
 # endData()s are generated as well.
 #
-class Parser( object ) :
+class Parser( sas.ParserBase ) :
 
     """
     Parser for STAR DDL format.
@@ -27,54 +27,6 @@ class Parser( object ) :
 
     This parser is for ``ContentHandler`` interface, see ``handlers.py`` for details.
     """
-
-    #
-    #
-    def __init__( self, lex, ch, eh, verbose = False ) :
-        """
-        constructor
-
-        ``lex``: ``sas.StarLexer``
-        ``ch`` : ``sas.ContentHandler``
-        ``eh`` : ``sas.ErrorHandler``
-        ``verbose`` flag is optional
-        """
-
-        assert isinstance( lex, sas.StarLexer )
-        assert isinstance( ch, sas.ContentHandler )
-        assert isinstance( eh, sas.ErrorHandler )
-        self._lexer = lex
-        self._ch = ch
-        self._eh = eh
-        self._verbose = bool( verbose )
-        self._data_name = "__FILE__"
-        self._save_name = "__UNNAMED__"
-
-    #
-    #
-    @property
-    def verbose( self ) :
-        """verbose flag"""
-        return bool( self._verbose )
-    @verbose.setter
-    def verbose( self, flag ) :
-        self._verbose = bool( flag )
-
-    # main
-    #
-    @classmethod
-    def parse( cls, lexer, content_handler, error_handler, verbose = False ) :
-        """
-        Main method
-
-        other parameters are the same as for the contructor
-
-        returns ``SansParser`` instance
-        """
-        parser = cls( lex = lexer, ch = content_handler, eh = error_handler, verbose = verbose )
-        assert isinstance( parser, Parser )
-        parser._parse_file()
-        return parser
 
     # read a delimited value
     # returns a pair: val, stop where stop is the "stop parsing" sign

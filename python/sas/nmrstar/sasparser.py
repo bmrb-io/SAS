@@ -12,58 +12,11 @@ import sas
 
 # this parser returns data name(s) (tags)  and data value(s) in separate callbacks
 #
-class SasParser( object ) :
+class SasParser( sas.ParserBase ) :
 
     """
     Parser for ``SasContentHandler`` interface, see ``handlers.py`` for details.
     """
-
-    #
-    #
-    def __init__( self, lex, ch, eh, verbose = False ) :
-        """
-        constructor
-
-        ``lex``: ``sas.StarLexer``
-        ``ch`` : ``sas.SasContentHandler``
-        ``eh`` : ``sas.ErrorHandler``
-        ``verbose`` flag is optional
-        """
-
-        assert isinstance( lex, sas.StarLexer )
-        assert isinstance( ch, sas.SasContentHandler )
-        assert isinstance( eh, sas.ErrorHandler )
-        self._lexer = lex
-        self._ch = ch
-        self._eh = eh
-        self._verbose = bool( verbose )
-        self._data_name = "__FILE__"
-
-    #
-    #
-    @property
-    def verbose( self ) :
-        """verbose flag"""
-        return bool( self._verbose )
-    @verbose.setter
-    def verbose( self, flag ) :
-        self._verbose = bool( flag )
-
-    # main
-    #
-    @classmethod
-    def parse( cls, lexer, content_handler, error_handler, verbose = False ) :
-        """
-        Main method
-
-        other parameters are the same as for the contructor
-
-        returns ``Parser`` instance
-        """
-        parser = cls( lex = lexer, ch = content_handler, eh = error_handler, verbose = verbose )
-        assert isinstance( parser, SasParser )
-        parser._parse_file()
-        return parser
 
     # top-level parse does not return anything
     #
@@ -513,7 +466,7 @@ class Ch( sas.SasContentHandler ) :
 if __name__ == "__main__" :
 
     e = sas.ErrorHandler()
-    c = Ch( verbose = True )
+    c = Ch( verbose = False )
     l = sas.StarLexer( fp = sys.stdin, bufsize = 0, verbose = False )
     with sas.timer( "SAS" ) :
         p = SasParser.parse( lexer = l, content_handler = c, error_handler = e, verbose = False )

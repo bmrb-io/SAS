@@ -32,7 +32,8 @@ def timer( label ) :
 #
 #
 from .lexer import StarLexer
-from .handlers import ErrorHandler, ContentHandler, ContentHandler2, SasContentHandler
+from .handlers import ErrorHandler, ContentHandlerBase, ContentHandler, ContentHandler2, SasContentHandler
+from .parsebase import ParserBase
 from .nmrstar import SasParser, SansParser, Parser as SansParser2
 from .mmcif import CifParser
 from .ddl import DdlParser
@@ -69,6 +70,7 @@ TOKENS = {
 
 #
 __all__ = ["TOKENS", "KEYWORDS", "SasException",
+    "ContentHandlerBase", "ParserBase",
     "StarLexer",
     "ErrorHandler", "ContentHandler", "ContentHandler2", "SasContentHandler",
     "SasParser", "SansParser", "SansParser2",

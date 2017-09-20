@@ -34,18 +34,11 @@ class ErrorHandler :
         sys.stderr.write("parser warning in line %s : %s\n" % (line, msg))
         return False
 
+# base class for content handlers
 #
-# This content handler defines single callback for a data item tag/value pair.
-# Data item in a loop will have "inloop" flag set to True.
-#
-class ContentHandler :
+class ContentHandlerBase :
     """
-    In this interface a data item (tag/value pair) is returned in one callback.
-
-    Loop items have ``inloop`` flag set to ``True``
-
-    This is convenient in many cases, but can be inefficient on files with large
-    semicolon- or triple-quote-delimited text values
+    Methods common to all content handlers
     """
 
     __metaclass__ = abc.ABCMeta
@@ -84,6 +77,22 @@ class ContentHandler :
     @abc.abstractmethod
     def comment( self, line, text ) :
         raise Exception( "Abstract method called" )
+
+
+#
+# This content handler defines single callback for a data item tag/value pair.
+# Data item in a loop will have "inloop" flag set to True.
+#
+class ContentHandler( ContentHandlerBase ) :
+    """
+    In this interface a data item (tag/value pair) is returned in one callback.
+
+    Loop items have ``inloop`` flag set to ``True``
+
+    This is convenient in many cases, but can be inefficient on files with large
+    semicolon- or triple-quote-delimited text values
+    """
+
     @abc.abstractmethod
     def data( self, tag, tagline, val, valline, delim, inloop ) :
         raise Exception( "Abstract method called" )
@@ -91,7 +100,7 @@ class ContentHandler :
 #
 # This content handler has separate callbacks for tag and value
 #
-class ContentHandler2 :
+class ContentHandler2( ContentHandlerBase ) :
     """
     This interface defines separate callbacks for tag ("data name") and value.
 
@@ -102,42 +111,7 @@ class ContentHandler2 :
     Can be inefficient on files with large semicolon- or triple-quote-delimited text values,
     about as fast as ``ContentHandler``.
     """
-    __metaclass__ = abc.ABCMeta
 
-    # not abstract because global blocks aren't used in mmcif or nmr-star
-    #
-    def startGlobal( self, line ) :
-        raise Exception( "Abstract method called" )
-    # not abstract because global blocks aren't used in mmcif or nmr-star
-    #
-    def endGlobal( self, line ) :
-        raise Exception( "Abstract method called" )
-
-    @abc.abstractmethod
-    def startData( self, line, name ) :
-        raise Exception( "Abstract method called" )
-    @abc.abstractmethod
-    def endData( self, line, name ) :
-        raise Exception( "Abstract method called" )
-
-    # not abstract because saveframes don't exist in mmcif
-    #
-    def startSaveframe( self, line, name ) :
-        raise Exception( "Abstract method called" )
-    # not abstract because saveframes don't exist in mmcif
-    #
-    def endSaveframe( self, line, name ) :
-        raise Exception( "Abstract method called" )
-
-    @abc.abstractmethod
-    def startLoop( self, line ) :
-        raise Exception( "Abstract method called" )
-    @abc.abstractmethod
-    def endLoop( self, line ) :
-        raise Exception( "Abstract method called" )
-    @abc.abstractmethod
-    def comment( self, line, text ) :
-        raise Exception( "Abstract method called" )
     @abc.abstractmethod
     def tag( self, line, tag ) :
         raise Exception( "Abstract method called" )
@@ -148,7 +122,7 @@ class ContentHandler2 :
 #
 # This content handler is the closest to SAX
 #
-class SasContentHandler :
+class SasContentHandler( ContentHandlerBase ) :
     """
     This interface defines callbacks for ```startValue```,```endValue```, and ```characters```.
 
@@ -157,42 +131,7 @@ class SasContentHandler :
     The extra function calls make this slower than the others in general, but on files with
     BLOB/CLOBs it is the fastest as well as leanest.
     """
-    __metaclass__ = abc.ABCMeta
 
-    # not abstract because global blocks aren't used in mmcif or nmr-star
-    #
-    def startGlobal( self, line ) :
-        raise Exception( "Abstract method called" )
-    # not abstract because global blocks aren't used in mmcif or nmr-star
-    #
-    def endGlobal( self, line ) :
-        raise Exception( "Abstract method called" )
-
-    @abc.abstractmethod
-    def startData( self, line, name ) :
-        raise Exception( "Abstract method called" )
-    @abc.abstractmethod
-    def endData( self, line, name ) :
-        raise Exception( "Abstract method called" )
-
-    # not abstract because saveframes don't exist in mmcif
-    #
-    def startSaveframe( self, line, name ) :
-        raise Exception( "Abstract method called" )
-    # not abstract because saveframes don't exist in mmcif
-    #
-    def endSaveframe( self, line, name ) :
-        raise Exception( "Abstract method called" )
-
-    @abc.abstractmethod
-    def startLoop( self, line ) :
-        raise Exception( "Abstract method called" )
-    @abc.abstractmethod
-    def endLoop( self, line ) :
-        raise Exception( "Abstract method called" )
-    @abc.abstractmethod
-    def comment( self, line, text ) :
-        raise Exception( "Abstract method called" )
     @abc.abstractmethod
     def tag( self, line, tag ) :
         raise Exception( "Abstract method called" )
@@ -205,3 +144,7 @@ class SasContentHandler :
     @abc.abstractmethod
     def characters( self, line, val ) :
         raise Exception( "Abstract method called" )
+
+#
+# eof
+#
