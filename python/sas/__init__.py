@@ -37,7 +37,7 @@ from .parsebase import ParserBase
 from .nmrstar import SasParser, SansParser, Parser as SansParser2
 from .mmcif import CifParser
 from .ddl import DdlParser
-from .quickcheck import QuickChecker
+from .quickcheck import QuickCheck
 
 # because of PLY's design I can't easily re-use lexer regexps elsewhere. so here they are again.
 # (use group for warnings: "keyword group(1) in value".)
