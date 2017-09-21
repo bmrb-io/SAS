@@ -8,6 +8,9 @@ from __future__ import absolute_import
 import sys
 import os
 import collections
+
+_UP = os.path.join( os.path.split( __file__ )[0], ".." )
+sys.path.append( os.path.realpath( _UP ) )
 import sas
 
 if (sys.version_info[0] == 2) and (sys.version_info[1] > 6) :
@@ -26,8 +29,26 @@ class QuickCheck( sas.ContentHandler, sas.ErrorHandler ) :
     kind of STAR file.
     """
 
-    def __init__( self, dictionary, *args, **kwargs ) :
-        super( self.__class__, self ).__init__( *args, **kwargs )
+    @classmethod
+    def check_nmr_star( cls, fp, dictionary = None, verbose = False ) :
+        chk = cls( dictionary )
+        lex =  sas.StarLexer( fp, bufsize = 0 )
+        p = sas.SansParser.parse( lexer = lex, content_handler = chk, error_handler = chk, verbose = verbose )
+        return (not chk._errs)
+
+    @classmethod
+    def check_nmr_star_file( cls, filename, dictionary = None, verbose = False ) :
+        rc = False
+        with open( filename, "rU" ) as fp :
+            rc = cls.check_nmr_star( fp, dictionary, verbose )
+        return rc
+
+# TODO: add methods to check mmCIF and DDL if anyone ever needs them
+#
+
+    #
+    #
+    def __init__( self, dictionary ) :
         if dictionary is not None :
             assert isinstance( dictionary, collections.Iterable )
         self._dict = dictionary
@@ -79,9 +100,9 @@ if __name__ == "__main__" :
 
     infile = None
     dictfile = None
-    if len( sys.argv ) > 0 :
-        infile = sys.argv[1]
     if len( sys.argv ) > 1 :
+        infile = sys.argv[1]
+    if len( sys.argv ) > 2 :
         dictfile = sys.argv[2]
 
     taglist = set()
@@ -98,16 +119,11 @@ if __name__ == "__main__" :
     if len( taglist ) < 1 :
         taglist = None
 
-    h = QuickCheck( dictionary = taglist )
-    if infile is not None :
-        with open( infile, "rU" ) as f :
-            lex =  sas.StarLexer( fp = f, bufsize = 0 )
-            p = sas.SansParser.parse( lexer = lex, content_handler = h, error_handler = h )
+    if infile is None :
+        rc = QuickCheck.check_nmr_star( fp = sys.stdin, dictionary = taglist, verbose = False )
     else :
-        lex =  sas.StarLexer( fp = sys.stdin, bufsize = 0 )
-        p = sas.SansParser.parse( lexer = lex, content_handler = h, error_handler = h )
-
-    if h._errs :
+        rc = QuickCheck.check_nmr_star_file( filename = infile, dictionary = taglist, verbose = False )
+    if not rc :
         sys.stderr.write( "%s check failed!\n" % ((infile is None and "stdin" or infile),) )
 
 #
