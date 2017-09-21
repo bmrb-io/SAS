@@ -77,7 +77,7 @@ __all__ = ["TOKENS", "KEYWORDS", "SasException",
     "SasParser", "SansParser", "SansParser2",
     "CifParser",
     "DdlParser",
-    "QuickChecker"
+    "QuickCheck"
     ]
 
 #
