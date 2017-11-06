@@ -152,8 +152,8 @@ class SasParser( sas.ParserBase ) :
                         if self._eh.error( line = token.lineno, msg = "found tag: %s, expected value" \
                                 % (token.value,) ) :
                             return True
-                        if self._ch.tag( line = token.lineno, tag = token.value ) :
-                            return True
+                    if self._ch.tag( line = token.lineno, tag = token.value ) :
+                        return True
                     need_value = True
                     continue
 

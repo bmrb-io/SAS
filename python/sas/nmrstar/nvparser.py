@@ -187,12 +187,16 @@ class Parser( sas.ParserBase ) :
         try :
             for token in self._lexer :
 
+                if self._verbose : sys.stdout.write( "> token: %s\n" % (token,) )
+
                 if token.type in ("NL", "SPACE" ) : continue
 
                 if token.type == "COMMENT" :
                     if self._ch.comment( line = token.lineno, text = token.value ) :
                         return True
                     continue
+
+#                print ">"
 
 # exit point
 #
@@ -204,6 +208,8 @@ class Parser( sas.ParserBase ) :
                         return True
                     return False
 
+#                print ">>"
+
                 if token.type == "LOOPSTART" :
                     if need_value :
                         if self._eh.error( line = token.lineno, msg = "found loop_, expected value" ) :
@@ -214,15 +220,20 @@ class Parser( sas.ParserBase ) :
                         return True
                     continue
 
+#                print ">>>"
+
                 if token.type == "TAGNAME" :
                     if need_value :
                         if self._eh.error( line = token.lineno, msg = "found tag: %s, expected value" \
                                 % (token.value,) ) :
                             return True
-                        if self._ch.tag( line = token.lineno, tag = token.value ) :
-                            return True
+                        print "Calling self._ch.tag"
+                    if self._ch.tag( line = token.lineno, tag = token.value ) :
+                        return True
                     need_value = True
                     continue
+
+#                print ">>>>"
 
                 if token.type in ("CHARACTERS","FRAMECODE") :
                     if not need_value :
@@ -233,6 +244,8 @@ class Parser( sas.ParserBase ) :
                         return True
                     need_value = False
                     continue
+
+#                print ">>>>>"
 
                 if token.type in ("SINGLESTART","TSINGLESTART","DOUBLESTART","TDOUBLESTART","SEMISTART") :
                     if not need_value :
@@ -245,6 +258,8 @@ class Parser( sas.ParserBase ) :
                         return True
                     need_value = False
                     continue
+
+#                print ">>>>>>"
 
                 if self._eh.error( line = token.lineno, msg = "invalid token in saveframe: %s : %s" \
                         % (token.type, token.value,) ) :
