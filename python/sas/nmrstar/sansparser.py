@@ -118,6 +118,8 @@ class SansParser( sas.ParserBase ) :
         try :
             for token in self._lexer :
 
+#                if self._verbose : sys.stdout.write( "> token %s\n" % (token,) )
+
                 if delimiter in ("SINGLESTART","DOUBLESTART") :
                     if token.type == "NL" :
                         if self._eh.error( line = token.lineno, msg = "newline in quoted value: %s" % (val,) ) :

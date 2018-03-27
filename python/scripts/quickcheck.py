@@ -32,7 +32,7 @@ class QuickCheck( sas.ContentHandler, sas.ErrorHandler ) :
     @classmethod
     def check_nmr_star( cls, fp, dictionary = None, verbose = False ) :
         chk = cls( dictionary )
-        lex =  sas.StarLexer( fp, bufsize = 0 )
+        lex =  sas.StarLexer( fp, bufsize = 0, verbose = verbose )
         p = sas.SansParser.parse( lexer = lex, content_handler = chk, error_handler = chk, verbose = verbose )
         return (not chk._errs)
 
@@ -120,7 +120,7 @@ if __name__ == "__main__" :
         taglist = None
 
     if infile is None :
-        rc = QuickCheck.check_nmr_star( fp = sys.stdin, dictionary = taglist, verbose = False )
+        rc = QuickCheck.check_nmr_star( fp = sys.stdin, dictionary = taglist, verbose = False ) # True )
     else :
         rc = QuickCheck.check_nmr_star_file( filename = infile, dictionary = taglist, verbose = False )
     if not rc :

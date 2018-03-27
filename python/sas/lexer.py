@@ -692,7 +692,7 @@ if __name__ == "__main__" :
 
     if iterator :
         with sas.timer( "lexer (iter)" ) :
-            l = StarLexer( fp = sys.stdin, bufsize = 0 ) # , verbose = True )
+            l = StarLexer( fp = sys.stdin, bufsize = 0, verbose = True )
             for t in l :
 #                pprint.pprint( t )
                 pass
