@@ -74,6 +74,10 @@ once you get it going.
 
 Are documented in a separate file: ``handlers.md``.
 
+## Usage examples
+
+See ``examples.md`` and ``python/scripts`` directory.
+
 ## See also
 
 STAR format references:
