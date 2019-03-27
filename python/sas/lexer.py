@@ -131,6 +131,8 @@ class StarLexer( object ) :
 #  method-tokens are applied in order 
 #  except for the exceptions
 
+    t_ignore = ' \t'
+
     #
     #
     def t_ANY_error( self, t ) :
@@ -185,6 +187,8 @@ class StarLexer( object ) :
     # 
     def t_SPACE( self, t ) :
         r"\s+"
+        if self._verbose :
+            sys.stdout.write( "Space in line %d\n" % (t.lexer.lineno,) )
         for c in t.value :
             if c == "\n" :
                 t.lexer.lineno += 1
@@ -477,8 +481,9 @@ class StarLexer( object ) :
 
     #
     #
+
     def t_GLOBALSTART( self, t ) :
-        r"[Gg][Ll][Oo][Bb][Aa][Ll]_"
+        r"[Gg][Ll][Oo][Bb][Aa][Ll]_(\s+|$)"
         if self._verbose :
             sys.stdout.write( "%s: Start global block in line %d\n" % (self.__class__.__name__,t.lexer.lineno,) )
         return t
@@ -504,7 +509,7 @@ class StarLexer( object ) :
     #
     #
     def t_SAVEEND( self, t ) :
-        r"save_"
+        r"save_(\s+|$)"
         if self._verbose :
             sys.stdout.write( "%s: End saveframe in line %d\n" % (self.__class__.__name__,t.lexer.lineno,) )
         return t
@@ -571,6 +576,8 @@ class StarLexer( object ) :
 #            raise sas.SasException( line = t.lexer.lineno, msg = "value is unquoted underscore" )
         return t
 
+    #
+    #
     def t_error( self, v ) :
         raise sas.SasException( line = t.lexer.lineno, msg = v )
 
@@ -594,7 +601,7 @@ class StarLexer( object ) :
         self._fp = fp
         self._bufsize = bufsize
         self._verbose = bool( verbose )
-        self.lexer = lex.lex( module = self, **lexer_args )
+        self.lexer = lex.lex( module = self, errorlog = lex.NullLogger(), **lexer_args )
 
     # iterator
     #

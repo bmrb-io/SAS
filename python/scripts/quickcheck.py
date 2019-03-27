@@ -122,7 +122,7 @@ if __name__ == "__main__" :
     if infile is None :
         rc = QuickCheck.check_nmr_star( fp = sys.stdin, dictionary = taglist, verbose = False ) # True )
     else :
-        rc = QuickCheck.check_nmr_star_file( filename = infile, dictionary = taglist, verbose = False )
+        rc = QuickCheck.check_nmr_star_file( filename = infile, dictionary = taglist, verbose = False ) # = True )
     if not rc :
         sys.stderr.write( "%s check failed!\n" % ((infile is None and "stdin" or infile),) )
 
