@@ -29,7 +29,7 @@ adhere to STAR character set definitions. For example, STAR defines whitespace
 as U+0020 and U+0009 (ASCII space and tab), but we're using ``\s`` as understood
 by python ``re`` module.
 
-It's not clear whether a stand-along unquoted underscore is a legal STAR value.
+It's not clear whether a stand-alone unquoted underscore is a legal STAR value.
 In this lexer it is.
 
 2012 revision of STAR format added python-style quoting of multi-line values
@@ -68,7 +68,7 @@ NMR-STAR and mmCIF are restricted variants of STAR, their syntax is quite
 simple. Because of that simplicity the parsers here are hand-written and 
 should be fairly easy to understand. If existing ones don't do what you need,
 pick one that's closest, make a copy and modify it. Consider a pull request
-once you get it going.
+once you have it working.
 
 ### Handlers
 

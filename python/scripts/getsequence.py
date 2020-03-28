@@ -131,7 +131,7 @@ class StarParser( sas.ContentHandler, sas.ErrorHandler ) :
             if not val in self._data.keys() :
                 self._data[val] = {}
         if tag == "_Entity.Name" :
-            self._data[self._entityid]["name"] = val.strip()
+            self._data[self._entityid]["name"] = str( val ).replace( "\n", " " ).strip()
 
 # 2.1 - fake entity IDs
 #
@@ -184,13 +184,19 @@ def unlink( filename, verbose = False ) :
 
 #
 #
-def fix_sequence( seq, verbose = False ) :
+def fix_sequence( seq, kind = "prot", verbose = False ) :
     """upcase, replace "(ABC)" with "X", (re-)wrap at 80 chars"""
+    assert kind in ("prot","nucl")
     if verbose : sys.stdout.write( "fix_sequence( %s )\n" % (seq,) )
     if (seq is None) or (seq in (".","?",)) : return ""
     rc = re.sub( r"\s+", "", seq )
     rc = re.sub( r"(\(.+\))", "X", rc )
     rc = rc.upper()
+
+# nucl. acid notation uses N for "any nucleotide, not a gap"
+# blast complains about Xes
+#
+    if kind == "nucl" : rc = rc.replace( "X", "N" )
     rc = "\n".join( rc[i:i+80] for i in xrange( 0, len( rc ), 80 ) )
     if verbose : sys.stdout.write( "fix_sequence()=%s\n" % (rc,) )
     return rc
@@ -249,12 +255,30 @@ def update( bmrbid, verbose = False ) :
             if verbose : sys.stdout.write( "No type in %s (null)\n" % (bmrbid,) )
             continue
 
+        restype = None
+        if (data[eid]["type"].lower() == "protein") \
+        or (data[eid]["type"][:11].lower() == "polypeptide") :
+            restype = "prot"
+
+        elif (data[eid]["type"].lower() == "rna") \
+        or (data[eid]["type"].lower() == "polyribonucleotide") :
+            restype = "nucl"
+
+        elif (data[eid]["type"].lower() == "dna") \
+        or (data[eid]["type"].lower() == "polydeoxyribonucleotide") :
+            restype = "nucl"
+
+        if not restype in ("prot","nucl") :
+            if verbose :
+                sys.stdout.write( "residue type is %s in %s:%s!\n" % (data[eid]["type"],bmrbid,eid,) )
+            continue
+
         seq = ""
         if "seq_can" in data[eid].keys() :
-            seq = fix_sequence( data[eid]["seq_can"], verbose = verbose )
+            seq = fix_sequence( data[eid]["seq_can"], kind = restype, verbose = verbose )
         if seq == "" :
             if "seq" in data[eid].keys() :
-                seq = fix_sequence( data[eid]["seq"], verbose = verbose )
+                seq = fix_sequence( data[eid]["seq"], kind = restype, verbose = verbose )
 
         if seq == "" : 
             if verbose : sys.stdout.write( "No sequence in %s\n" % (bmrbid,) )
