@@ -5,7 +5,7 @@ from __future__ import absolute_import
 
 import sys
 import os
-#import pprint
+import pprint
 
 _UP = os.path.join( os.path.split( __file__ )[0], "../.." )
 sys.path.append( os.path.realpath( _UP ) )
@@ -275,6 +275,10 @@ class Parser( sas.ParserBase ) :
         try :
             for token in self._lexer :
 
+                if self._verbose : 
+                    sys.stdout.write( self.__class__.__name__ + "._parse_save(): token\n" )
+                    pprint.pprint( token )
+
                 if token.type in ("NL", "SPACE" ) : continue
 
                 if token.type == "COMMENT" :
@@ -375,6 +379,10 @@ class Parser( sas.ParserBase ) :
         try :
             for token in self._lexer :
 
+                if self._verbose : 
+                    sys.stdout.write( self.__class__.__name__ + "._parse_loop(): token\n" )
+                    pprint.pprint( token )
+
                 if token.type in ("NL", "SPACE" ) : continue
 
                 if token.type == "COMMENT" :
@@ -424,6 +432,7 @@ class Parser( sas.ParserBase ) :
                     return False
 
                 if token.type in ("SAVEEND", "LOOPSTART") :
+#                    print "* got here"
                     if reading_tags :
                         if len( tags ) < 1 :
                             if self._eh.error( line = token.lineno, msg = "Loop with no tags" ) :
@@ -438,8 +447,19 @@ class Parser( sas.ParserBase ) :
                     if self._ch.endLoop( line = token.lineno ) :
                         return True
 
+#                    print "** got here"
+# push back "save_" or "loop_" to re-trigger in the caller 
+#
+#                    if token.type == "SAVEEND" :
+#                        print "***", token.value
+#                        print "***", len( token.value )
+#                        token.lexer.lexpos -= len( str( token.value ) )
+#                    elif token.type == "LOOPSTART" :
+#
+# "if" just in case
+#
                     if token.lexer.lexpos > 4 :
-                        token.lexer.lexpos -= 5
+                        token.lexer.lexpos -= len( str( token.value ) )
                     else :
                         raise sas.SasException( line = token.lineno, msg = "can't push back '%s'!" \
                             % (token.value,) )

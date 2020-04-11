@@ -626,6 +626,7 @@ class StarLexer( object ) :
             buf += line
             if len( buf ) >= self._bufsize :
                 self.lexer.input( buf )
+#                sys.stderr.write( "INP: buf is |%s|\n" % (buf,) )
                 yield
                 buf = ""
 
@@ -657,7 +658,11 @@ class StarLexer( object ) :
 #
             else : inp.next()
 
+#        sys.stderr.write( "LEX: before token, lexdata is |%s|\n" % (self.lexer.lexdata,) )
         rc = self.lexer.token()
+#        sys.stderr.write( "LEX: token is |%s|\n" % (rc,) )
+#        pprint.pprint( rc )
+#        sys.stderr.write( "LEX: after token, lexdata is |%s|\n" % (self.lexer.lexdata,) )
         if rc is None :
             if self._fp is None : raise StopIteration
             else : inp.next()
