@@ -1,0 +1,22 @@
+#
+# entry with errors
+# - loop with no rows
+#
+
+data_loop2
+
+save_entry_information
+   _Entry.Sf_category                    entry_information
+
+   loop_
+      _Entry_author.Ordinal
+      _Entry_author.Given_name
+      _Entry_author.Family_name
+      _Entry_author.First_initial
+      _Entry_author.Middle_initials
+      _Entry_author.Family_title
+      _Entry_author.Entry_ID
+
+   stop_
+
+save_

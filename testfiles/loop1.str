@@ -1,0 +1,28 @@
+#
+# entry with errors
+#  - missing value in row 2
+#
+
+data_loop1
+
+save_entry_information
+   _Entry.Sf_category                    entry_information
+
+   loop_
+      _Entry_author.Ordinal
+      _Entry_author.Given_name
+      _Entry_author.Family_name
+      _Entry_author.First_initial
+      _Entry_author.Middle_initials
+      _Entry_author.Family_title
+      _Entry_author.Entry_ID
+
+      1 Claudia Cornilescu . C. . 15000 
+      2 Gabriel Cornilescu . .  .
+      3 Erik    Hadley     . B. . 15000 
+      4 Samuel  Gellman    . H. . 15000 
+      5 John    Markley    . L. . 15000
+
+   stop_
+
+save_

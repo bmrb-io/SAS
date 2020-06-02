@@ -1,0 +1,18 @@
+#
+# entry with errors
+# - missing closing triple-quote
+#
+
+data_loop5
+
+save_entry_information
+   _Entry.Sf_category                    entry_information
+
+   loop_
+      _Bork.Bork
+
+      '''some
+         loops
+
+   stop_
+save_

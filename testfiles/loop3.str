@@ -1,0 +1,21 @@
+#
+# entry with errors
+# - loop with no headers
+#
+
+data_loop3
+
+save_entry_information
+   _Entry.Sf_category                    entry_information
+
+   loop_
+
+      1 Claudia Cornilescu . C. . 15000 
+      2 Gabriel Cornilescu . .  . 15000
+      3 Erik    Hadley     . B. . 15000 
+      4 Samuel  Gellman    . H. . 15000 
+      5 John    Markley    . L. . 15000
+
+   stop_
+
+save_

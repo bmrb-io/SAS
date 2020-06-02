@@ -1,0 +1,16 @@
+#
+# entry with errors
+# - loop with no body
+#
+
+data_loop4
+
+save_entry_information
+   _Entry.Sf_category                    entry_information
+
+   loop_
+
+
+   stop_
+
+save_
