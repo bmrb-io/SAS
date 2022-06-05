@@ -1,10 +1,9 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 
 from __future__ import absolute_import
 
 import sys
 import os
-#import pprint
 
 _UP = os.path.join( os.path.split( __file__ )[0], "../.." )
 sys.path.append( os.path.realpath( _UP ) )
@@ -56,7 +55,7 @@ class SansParser( sas.ParserBase ) :
                     ln = token.lineno
                 self._ch.endData( line = ln, name = self._data_name )
 
-        except sas.SasException, e :
+        except sas.SasException as e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return
 
@@ -100,7 +99,7 @@ class SansParser( sas.ParserBase ) :
 
             return False
 
-        except sas.SasException, e :
+        except sas.SasException as e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 
@@ -169,7 +168,7 @@ class SansParser( sas.ParserBase ) :
                 self._eh.fatalError( line = ln, msg = "EOF in delimited value" )
                 stop = True
 
-        except sas.SasException, e :
+        except sas.SasException as e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             stop = True
 
@@ -269,7 +268,7 @@ class SansParser( sas.ParserBase ) :
                     % (name,) )
                 return True
 
-        except sas.SasException, e :
+        except sas.SasException as e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 
@@ -386,7 +385,7 @@ class SansParser( sas.ParserBase ) :
                 self._eh.fatalError( line = ln, msg = "EOF in loop (no closing stop_)" )
                 return True
 
-        except sas.SasException, e :
+        except sas.SasException as e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 

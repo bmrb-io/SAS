@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 #
 # ***************************************************************************
 # Scanner flex specification
@@ -48,11 +48,13 @@ from __future__ import absolute_import
 
 import sys
 import os
+import io
 import re
 import ply.lex as lex
 import collections
 import types
 import pprint
+import logging
 
 _UP = os.path.join( os.path.split( __file__ )[0], ".." )
 sys.path.append( os.path.realpath( _UP ) )
@@ -187,8 +189,7 @@ class StarLexer( object ) :
     # 
     def t_SPACE( self, t ) :
         r"\s+"
-        if self._verbose :
-            sys.stdout.write( "Space in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Space in line %d" % (t.lexer.lineno,) )
         for c in t.value :
             if c == "\n" :
                 t.lexer.lineno += 1
@@ -203,8 +204,7 @@ class StarLexer( object ) :
     #
     def t_ANY_ESQUOTE( self, t ) :
         r"\x07'"
-        if self._verbose :
-            sys.stdout.write( "Escaped single quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Escaped single quote in line %d" % (t.lexer.lineno,) )
         t.type = "CHARACTERS"
         t.value = t.value.lstrip( "\x07" )
         return t
@@ -214,8 +214,7 @@ class StarLexer( object ) :
     #
     def t_TSQUOTE( self, t ) :
         r"'''"
-        if self._verbose :
-            sys.stdout.write( "Opening 3xsingle quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Opening 3xsingle quote in line %d" % (t.lexer.lineno,) )
         t.lexer.push_state( "YYTSINGLE" )
         t.type = "TSINGLESTART"
         return t
@@ -225,24 +224,21 @@ class StarLexer( object ) :
     #
     def t_YYTSINGLE_TSQUOTE( self, t ) :
         r"'''"
-        if self._verbose :
-            sys.stdout.write( "Closing 3xsingle quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Closing 3xsingle quote in line %d" % (t.lexer.lineno,) )
         t.lexer.pop_state()
         t.type = "TSINGLEEND"
         return t
 
     def t_YYTSINGLE_CHARACTERS( self, t ) :
         r"(?:[^']+)|'{1,2}"
-        if self._verbose :
-            sys.stdout.write( "Line in triple-quotes (%d): |%s|\n" % (t.lexer.lineno,t.value) )
+        logging.debug( "Line in triple-quotes (%d): |%s|" % (t.lexer.lineno,t.value) )
         return t
 
     # unescaped single quote in YYINITIAL starts YYSINGLE
     #
     def t_SQUOTE( self, t ) :
         r"'"
-        if self._verbose :
-            sys.stdout.write( "Opening single quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Opening single quote in line %d" % (t.lexer.lineno,) )
         t.lexer.push_state( "YYSINGLE" )
         t.type = "SINGLESTART"
         return t
@@ -251,8 +247,7 @@ class StarLexer( object ) :
     #
     def t_YYSINGLE_SQUOTE( self, t ) :
         r"'"
-        if self._verbose :
-            sys.stdout.write( "Single quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Single quote in line %d" % (t.lexer.lineno,) )
 
 # lookahead
 #  input reader must split on newlines or this will not work
@@ -277,8 +272,7 @@ class StarLexer( object ) :
 
     def t_YYDOUBLE_YYSEMI_SQUOTE( self, t ) :
         r"'"
-        if self._verbose :
-            sys.stdout.write( "Single quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Single quote in line %d" % (t.lexer.lineno,) )
         t.type = "CHARACTERS"
         return t
 
@@ -286,8 +280,7 @@ class StarLexer( object ) :
     #
     def t_YYSINGLE_CHARACTERS( self, t ) :
         r"[^'\x07\n]+"
-        if self._verbose :
-            sys.stdout.write( "chars in single quotes in line %d: |%s\n" % (t.lexer.lineno,t.value) )
+        logging.debug( "chars in single quotes in line %d: |%s" % (t.lexer.lineno,t.value) )
         return t
 
 ##################################
@@ -297,8 +290,7 @@ class StarLexer( object ) :
     #
     def t_ANY_EDQUOTE( self, t ) :
         r'\x07"'
-        if self._verbose :
-            sys.stdout.write( "Escaped double quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Escaped double quote in line %d" % (t.lexer.lineno,) )
         t.type = "characters"
         t.value = t.value.lstrip( "\x07" )
         return t
@@ -308,8 +300,7 @@ class StarLexer( object ) :
     #
     def t_TDQUOTE( self, t ) :
         r'"""'
-        if self._verbose :
-            sys.stdout.write( "Opening 3xdouble quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Opening 3xdouble quote in line %d" % (t.lexer.lineno,) )
         t.lexer.push_state( "YYTDOUBLE" )
         t.type = "TDOUBLESTART"
         return t
@@ -319,24 +310,21 @@ class StarLexer( object ) :
     #
     def t_YYTDOUBLE_TDQUOTE( self, t ) :
         r'"""'
-        if self._verbose :
-            sys.stdout.write( "Closing 3xdouble quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Closing 3xdouble quote in line %d" % (t.lexer.lineno,) )
         t.lexer.pop_state()
         t.type = "TDOUBLEEND"
         return t
 
     def t_YYTDOUBLE_CHARACTERS( self, t ) :
         r'(?:[^"]+)|"{1,2}'
-        if self._verbose :
-            sys.stdout.write( "Line in triple-double-quotes (%d): |%s|\n" % (t.lexer.lineno,t.value) )
+        logging.debug( "Line in triple-double-quotes (%d): |%s|" % (t.lexer.lineno,t.value) )
         return t
 
     # unescaped double quote in YYINITIAL
     #
     def t_DQUOTE( self, t ) :
         r'"'
-        if self._verbose :
-            sys.stdout.write( "Opening double quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Opening double quote in line %d" % (t.lexer.lineno,) )
         t.lexer.push_state( "YYDOUBLE" )
         t.type = "DOUBLESTART"
         return t
@@ -345,8 +333,7 @@ class StarLexer( object ) :
     #
     def t_YYDOUBLE_DQUOTE( self, t ) :
         r'"'
-        if self._verbose :
-            sys.stdout.write( "Double quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Double quote in line %d" % (t.lexer.lineno,) )
 
 # lookahead
 #  input reader must split on newlines or this will not work
@@ -371,8 +358,7 @@ class StarLexer( object ) :
     #
     def t_YYSINGLE_YYSEMI_DQUOTE( self, t ) :
         r'"'
-        if self._verbose :
-            sys.stdout.write( "Double quote in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Double quote in line %d" % (t.lexer.lineno,) )
         t.type = "CHARACTERS"
         return t
 
@@ -380,8 +366,7 @@ class StarLexer( object ) :
     #
     def t_YYDOUBLE_CHARACTERS( self, t ) :
         r'[^"\x07\n]+'
-        if self._verbose :
-            sys.stdout.write( "chars in double quotes in line %d: |%s\n" % (t.lexer.lineno,t.value) )
+        logging.debug( "chars in double quotes in line %d: |%s" % (t.lexer.lineno,t.value) )
         return t
 
 #######################################################
@@ -396,8 +381,7 @@ class StarLexer( object ) :
     #
     def t_SEMICOLON( self, t ) :
         r";"
-        if self._verbose :
-            sys.stdout.write( "Semicolon in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Semicolon in line %d" % (t.lexer.lineno,) )
 #            print ">>> lexpos=", t.lexer.lexpos, ":", t.lexer.lexdata[t.lexer.lexpos - 2], ":"
 
 # start of chunk or lookbehind
@@ -424,8 +408,7 @@ class StarLexer( object ) :
     #
     def t_YYSEMI_SEMICOLON( self, t ) :
         r";"
-        if self._verbose :
-            sys.stdout.write( "Semicolon in YYSEMI line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Semicolon in YYSEMI line %d" % (t.lexer.lineno,) )
 
         if t.lexer.lexpos == 1 :
             t.lexer.pop_state()
@@ -448,8 +431,7 @@ class StarLexer( object ) :
     #
     def t_YYSINGLE_YYDOUBLE_SEMICOLON( self, t ) :
         r";"
-        if self._verbose :
-            sys.stdout.write( "Semicolon in quoted value in line %d\n" % (t.lexer.lineno,) )
+        logging.debug( "Semicolon in quoted value in line %d" % (t.lexer.lineno,) )
 
         t.type = "CHARACTERS"
         return t
@@ -458,8 +440,7 @@ class StarLexer( object ) :
     #
     def t_YYSEMI_CHARACTERS( self, t ) :
         r".+"
-        if self._verbose :
-            sys.stdout.write( "Line in semicolons (%d): |%s|\n" % (t.lexer.lineno,t.value) )
+        logging.debug( "Line in semicolons (%d): |%s|" % (t.lexer.lineno,t.value) )
         return t
 
 #######################################################
@@ -484,16 +465,14 @@ class StarLexer( object ) :
 
     def t_GLOBALSTART( self, t ) :
         r"[Gg][Ll][Oo][Bb][Aa][Ll]_(\s+|$)"
-        if self._verbose :
-            sys.stdout.write( "%s: Start global block in line %d\n" % (self.__class__.__name__,t.lexer.lineno,) )
+        logging.debug( "%s: Start global block in line %d" % (self.__class__.__name__,t.lexer.lineno,) )
         return t
 
     # strip "data_"
     #
     def t_DATASTART( self, t ) :
         r"[Dd][Aa][Tt][Aa]_\S+"
-        if self._verbose :
-            sys.stdout.write( "%s: Start data |%s| in line %d\n" % (self.__class__.__name__,t.value,t.lexer.lineno,) )
+        logging.debug( "%s: Start data |%s| in line %d" % (self.__class__.__name__,t.value,t.lexer.lineno,) )
         t.value = t.value[5:]
         return t
 
@@ -501,8 +480,7 @@ class StarLexer( object ) :
     #
     def t_SAVESTART( self, t ) :
         r"save_\S+"
-        if self._verbose :
-            sys.stdout.write( "%s: Start saveframe |%s| in line %d\n" % (self.__class__.__name__,t.value,t.lexer.lineno,) )
+        logging.debug( "%s: Start saveframe |%s| in line %d" % (self.__class__.__name__,t.value,t.lexer.lineno,) )
         t.value = t.value[5:]
         return t
 
@@ -510,24 +488,21 @@ class StarLexer( object ) :
     #
     def t_SAVEEND( self, t ) :
         r"save_(\s+|$)"
-        if self._verbose :
-            sys.stdout.write( "%s: End saveframe in line %d\n" % (self.__class__.__name__,t.lexer.lineno,) )
+        logging.debug( "%s: End saveframe in line %d" % (self.__class__.__name__,t.lexer.lineno,) )
         return t
 
     #
     #
     def t_LOOPSTART( self, t ) :
         r"loop_"
-        if self._verbose :
-            sys.stdout.write( "%s: Start loop in line %d\n" % (self.__class__.__name__,t.lexer.lineno,) )
+        logging.debug( "%s: Start loop in line %d" % (self.__class__.__name__,t.lexer.lineno,) )
         return t
 
     #
     #
     def t_STOP( self, t ) :
         r"stop_"
-        if self._verbose :
-            sys.stdout.write( "%s: End loop in line %d\n" % (self.__class__.__name__,t.lexer.lineno,) )
+        logging.debug( "%s: End loop in line %d" % (self.__class__.__name__,t.lexer.lineno,) )
         return t
 
 #######################################################
@@ -547,8 +522,7 @@ class StarLexer( object ) :
     #
     def t_TAGNAME( self, t ) :
         r"_\S+"
-        if self._verbose :
-            sys.stdout.write( "%s: Tag in line %d: |%s|\n" % (self.__class__.__name__,t.lexer.lineno,t.value) )
+        logging.debug( "%s: Tag in line %d: |%s|" % (self.__class__.__name__,t.lexer.lineno,t.value) )
         return t
 
 #######################################################
@@ -558,8 +532,7 @@ class StarLexer( object ) :
     #
     def t_FRAMECODE( self, t ) :
         r"\$\S+"
-        if self._verbose :
-            sys.stdout.write( "%s: Framecode value in line %d: |%s|\n" % (self.__class__.__name__,t.lexer.lineno,t.value) )
+        logging.debug( "%s: Framecode value in line %d: |%s|" % (self.__class__.__name__,t.lexer.lineno,t.value) )
         t.value = t.value.lstrip( "$" )
         return t
 
@@ -567,8 +540,7 @@ class StarLexer( object ) :
     #
     def t_CHARACTERS( self, t ) :
         r"\S+"
-        if self._verbose :
-            sys.stdout.write( "%s: Bareword value in line %d: |%s|\n" % (self.__class__.__name__,t.lexer.lineno,t.value) )
+        logging.debug( "%s: Bareword value in line %d: |%s|" % (self.__class__.__name__,t.lexer.lineno,t.value) )
 
 # not sure if I want to do this:
 #
@@ -596,7 +568,7 @@ class StarLexer( object ) :
         ``lexer_args`` are passed on to PLY lexer
         """
 
-        if verbose : sys.stdout.write( self.__class__.__name__ + ".init()\n" )
+        logging.debug( self.__class__.__name__ + ".init()" )
 
         self._fp = fp
         self._bufsize = bufsize
@@ -606,21 +578,17 @@ class StarLexer( object ) :
     # iterator
     #
     def __iter__( self ) :
-        if self._verbose : sys.stdout.write( self.__class__.__name__ + ".__iter__()\n" )
+        logging.debug( self.__class__.__name__ + ".__iter__()" )
         return self
 
-    # py3 compat.
-    #
-    def __next__( self ) :
-        return self.next()
 
     # generator: reads the next chunk of input and feeds it to the lexer
     #
     def _input_reader( self ) :
         """buffering input reader: reads lines until the buffer is greater than _bufsize,
             then yields the buffer."""
-        if self._verbose : sys.stdout.write( self.__class__.__name__ + "._input_reader()\n" )
-        assert isinstance( self._fp, file )
+        logging.debug( "%s._input_reader()" % (self.__class__.__name__,) )
+        assert isinstance( self._fp, io.IOBase )
         buf = ""
         for line in self._fp :
             buf += line
@@ -639,9 +607,13 @@ class StarLexer( object ) :
     #
     #
     def next( self ) :
-        """returns the next lexer token"""
-        if self._verbose : sys.stdout.write( self.__class__.__name__ + ".next()\n" )
+        return self.__next__()
 
+    # py3 compat.
+    #
+    def __next__( self ) :
+        """returns the next lexer token"""
+        logging.debug( self.__class__.__name__ + ".__next__()" )
 
 # fisrt chunk of data: if reading from a file we need to fire off the feeder
 #
@@ -656,7 +628,7 @@ class StarLexer( object ) :
 
 # or else bite off a chunk ourselves
 #
-            else : inp.next()
+            else : inp.__next__()
 
 #        sys.stderr.write( "LEX: before token, lexdata is |%s|\n" % (self.lexer.lexdata,) )
         rc = self.lexer.token()
@@ -665,7 +637,7 @@ class StarLexer( object ) :
 #        sys.stderr.write( "LEX: after token, lexdata is |%s|\n" % (self.lexer.lexdata,) )
         if rc is None :
             if self._fp is None : raise StopIteration
-            else : inp.next()
+            else : inp.__next__()
             rc = self.lexer.token()
 
 # if it's none again, we're done
@@ -685,7 +657,7 @@ class StarLexer( object ) :
 
         NOTE that they must be whole lines, or bad things will happen"""
 
-        if self._verbose : sys.stdout.write( self.__class__.__name__ + ".send()\n" )
+        logging.debug( self.__class__.__name__ + ".send()" )
 
         self.lexer.input( lines )
 
@@ -694,8 +666,10 @@ class StarLexer( object ) :
 
 if __name__ == "__main__" :
 
-#    l = StarLexer( verbose = True )
-#    lex.runmain()
+    logging.basicConfig(
+        level = logging.DEBUG,
+        handlers = [ logging.StreamHandler( sys.stdout ) ]
+    )
 
     iterator = True
     if len( sys.argv ) > 1 :
@@ -706,15 +680,13 @@ if __name__ == "__main__" :
         with sas.timer( "lexer (iter)" ) :
             l = StarLexer( fp = sys.stdin, bufsize = 0, verbose = True )
             for t in l :
-#                pprint.pprint( t )
                 pass
 
     else :
         with sas.timer( "lexer (send)" ) :
-            l = StarLexer() #  verbose = True )
+            l = StarLexer()
             for line in sys.stdin :
                 l.send( line )
                 for t in l :
-#                    pprint.pprint( t )
                     pass
 

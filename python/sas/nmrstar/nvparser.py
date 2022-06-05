@@ -1,10 +1,10 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 
 from __future__ import absolute_import
 
 import sys
 import os
-#import pprint
+import logging
 
 _UP = os.path.join( os.path.split( __file__ )[0], "../.." )
 sys.path.append( os.path.realpath( _UP ) )
@@ -57,7 +57,7 @@ class Parser( sas.ParserBase ) :
                 self._ch.endData( line = ln, name = self._data_name )
                 return
 
-        except sas.SasException, e :
+        except sas.SasException as e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return
 
@@ -99,7 +99,7 @@ class Parser( sas.ParserBase ) :
                 self._ch.endData( line = ln, name = self._data_name )
                 return True
 
-        except sas.SasException, e :
+        except sas.SasException as e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 
@@ -166,7 +166,7 @@ class Parser( sas.ParserBase ) :
                 self._eh.fatalError( line = ln, msg = "EOF in delimited value" )
                 stop = True
 
-        except sas.SasException, e :
+        except sas.SasException as e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             stop = True
 
@@ -196,7 +196,6 @@ class Parser( sas.ParserBase ) :
                         return True
                     continue
 
-#                print ">"
 
 # exit point
 #
@@ -208,7 +207,6 @@ class Parser( sas.ParserBase ) :
                         return True
                     return False
 
-#                print ">>"
 
                 if token.type == "LOOPSTART" :
                     if need_value :
@@ -220,20 +218,18 @@ class Parser( sas.ParserBase ) :
                         return True
                     continue
 
-#                print ">>>"
 
                 if token.type == "TAGNAME" :
                     if need_value :
                         if self._eh.error( line = token.lineno, msg = "found tag: %s, expected value" \
                                 % (token.value,) ) :
                             return True
-                        print "Calling self._ch.tag"
+                        logging.debug( "Calling self._ch.tag" )
                     if self._ch.tag( line = token.lineno, tag = token.value ) :
                         return True
                     need_value = True
                     continue
 
-#                print ">>>>"
 
                 if token.type in ("CHARACTERS","FRAMECODE") :
                     if not need_value :
@@ -245,7 +241,6 @@ class Parser( sas.ParserBase ) :
                     need_value = False
                     continue
 
-#                print ">>>>>"
 
                 if token.type in ("SINGLESTART","TSINGLESTART","DOUBLESTART","TDOUBLESTART","SEMISTART") :
                     if not need_value :
@@ -259,7 +254,6 @@ class Parser( sas.ParserBase ) :
                     need_value = False
                     continue
 
-#                print ">>>>>>"
 
                 if self._eh.error( line = token.lineno, msg = "invalid token in saveframe: %s : %s" \
                         % (token.type, token.value,) ) :
@@ -276,7 +270,7 @@ class Parser( sas.ParserBase ) :
                 self._eh.fatalError( line = ln, msg = "EOF in saveframe: %s (no closing save_)" % (name,) )
                 return True
 
-        except sas.SasException, e :
+        except sas.SasException as e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 
@@ -377,7 +371,7 @@ class Parser( sas.ParserBase ) :
                 self._eh.fatalError( line = ln, msg = "EOF in loop (no closing stop_)" )
                 return True
 
-        except sas.SasException, e :
+        except sas.SasException as e :
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 
