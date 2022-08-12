@@ -1,6 +1,6 @@
-#SAS handlers
+# SAS handlers
 
-##Differences from SAX
+## Differences from SAX
 
 Most SAS callbacks return a ``stop`` flag: ``True`` to stop parsing, ``False`` to continue.
 (The parser is expected to keep its current position so you can continue later from where
@@ -13,7 +13,7 @@ There's three (as of the time of this writing) slightly different versions of th
 
 The callbacks themselves are of course different since STAR is not XML.
 
-##ErrorHandler
+## ErrorHandler
 
 ``ErrorHandler`` defines 3 callbacks:
 
@@ -27,7 +27,7 @@ The callbacks themselves are of course different since STAR is not XML.
   * ``fatalError( line, message)``: this is an unrecoverable error, such as short read (premature
     EOF) or an error in the scanner. There is no return value, the parser will terminate.
 
-##ContentHandlers
+## ContentHandlers
 
 There are different versions of ``ContentHandler`` (and corresponding parsers) for different
 usage patterns. The handlers define separate star/end callbacks for each STAR element, unlike
@@ -58,7 +58,7 @@ isn't really useful, it's here for completeness and probably will never need to 
   * ``comment( line, text )``: the parsers do not ignore comments, it's up to you to decide
    whether you want to keep them or not.
 
-###SasContentHandler
+### SasContentHandler
 
 This handler is the closest to SAX model. All values are returned as a sequence of ``startValue()`` -
 `` characters()`` [...] - ``endValue()`` callbacks. This can be more efficient when reading files
@@ -78,7 +78,7 @@ followed by a sequence of tags, followed by a sequence of values and ``endLoop()
    value. E.g. for multi-line values there will usually be one per line.
   * ``endValue( line, delimiter )``: delimiter is the same as in ``startValue()``
 
-###ContentHandler2
+### ContentHandler2
 
 Data items are returned as separate tag and value elements. A loop is returned as ``startLoop()``
 followed by a sequence of tags, followed by a sequence of values and ``endLoop()``.
@@ -90,7 +90,7 @@ Data value is returned in a single callback instead of ``start() - characters() 
     dollar sign ('$') for framecode values, single or double-quote, semicolon, or python-style 
     triple- single or double quotes.
 
-###ContentHandler
+### ContentHandler
 
 All data items are returned in a single ``data`` callback: the parser buffers the tag and returns
 it together with the value after that is parsed.
