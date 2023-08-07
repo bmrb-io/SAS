@@ -17,35 +17,262 @@
 # of the entity saveframe for 2.1 files.
 #
 
-from __future__ import absolute_import
-
 import os
 import sys
 import re
-import pprint
 import subprocess
 import argparse
 import glob
+import logging
 
 _UP = os.path.realpath( os.path.join( os.path.split( __file__ )[0], ".." ) )
 sys.path.append( _UP )
 import sas
 
+#
+#
+#
+class Getsequence( object ) :
+
 # files are in ${ENTRYDIR}/bmr${ID}/clean/bmr${ID}_[3|21].str
 #
-ENTRYROOT = "/share/subedit/entries"
-ENTRYDIR = os.path.join( ENTRYROOT, "bmr%s/clean" )
-ENTRYFILE2 = "bmr%s_21.str"
-ENTRYFILE3 = "bmr%s_3.str"
+    ENTRYDIR = "/projects/BMRB/private/entrydirs/macromolecules"
+    CLEANDIR = "clean"
+    ENTRYFILE2 = "bmr%s_21.str"
+    ENTRYFILE3 = "bmr%s_3.str"
 
 # this goes into ${ENTRYDIR}/bmr${ID}/clean/bmr${ID}.%s.fasta
 # the last %s here is "prot", "dna", or "rna", dep. on type
 #
-SEQFILE = "bmr%s.%s.fasta"
+    SEQFILE = "bmr%s.%s.fasta"
 
 # fasta header for blast
 #
-HEADER = ">gnl|mdb|bmrb%s:%s %s"
+    HEADER = ">gnl|mdb|bmrb%s:%s %s"
+
+    #
+    #
+    @classmethod
+    def runall( cls ) :
+        logging.debug( "* runall *" )
+        obj = cls()
+        entrydir = os.path.join( cls.ENTRYDIR, "bmr*" )
+        logging.debug( "** %s *" % (entrydir,) )
+        for d in sorted( glob.glob( entrydir ) ) :
+            logging.debug( "** %s **" % (d,) )
+            m = obj._pat.search( d )
+            if not m :
+                logging.info( "%s does not match pattern" % (d,) )
+                continue
+
+            obj.getsequence( d, m.group( 1 ) )
+
+        return obj
+
+    #
+    #
+    @classmethod
+    def runone( cls, bmrbid ) :
+        logging.debug( "* run one %s *" % (bmrbid,) )
+        obj = cls()
+        entrydir = os.path.join( cls.ENTRYDIR, "bmr%s" % (bmrbid,) )
+        logging.debug( "** %s *" % (entrydir,) )
+        if os.path.isdir( entrydir ) :
+            obj.getsequence( entrydir, bmrbid )
+
+        return obj
+
+    #
+    #
+    def __init__( self ) :
+        self._pat = re.compile( r"bmr(\d+)$" )
+        self._seqs = {}
+
+# these are sequence files
+        self._updated = 0
+        self._deleted = 0
+
+# and these are entries
+        self._errors = 0
+        self._total = 0
+
+    #
+    #
+    def getsequence( self, entrydir, bmrbid ) :
+        self._total += 1
+        entryfile = os.path.join( entrydir, self.CLEANDIR, self.ENTRYFILE3 % (bmrbid,) )
+        if not os.path.exists( entryfile ) :
+            logging.info( "No 3.1 file for %s: %s" % (bmrbid, entryfile,) )
+            entryfile = os.path.join( entrydir, self.CLEANDIR, self.ENTRYFILE2 % (bmrbid,) )
+
+# not released?
+#
+        if not os.path.exists( entryfile ) :
+            logging.info( "%s: no entry file %s" % (bmrbid, entryfile) )
+            return
+
+        self.parse( entryfile, bmrbid )
+        logging.debug( self._seqs )
+
+# got sequences ?
+#
+        for i in ("dna", "prot", "rna") :
+            outfile = os.path.join( entrydir, self.CLEANDIR, self.SEQFILE % (bmrbid,i,) )
+            if os.path.exists( outfile ) :
+                if len( self._seqs[i] ) < 1 :
+
+                    logging.debug( "%s: no %s sequence but file exists; deleting" % (bmrbid,i,) )
+#FIXME: check 4 errs
+                    if( self.unlink( outfile ) != 1 ) :
+                        logging.error( "can't delete %s" % (outfile,) )
+                    continue
+
+            self.update( self._seqs[i], outfile )
+
+    #
+    #
+    def parse( self, entryfile, bmrbid ) :
+
+        self._seqs.clear()
+        data = StarParser.parse_file( entryfile )
+        logging.debug( data )
+        if data is None :
+            self._errors += 1
+            return
+
+        self._seqs["rna"] = []
+        self._seqs["dna"] = []
+        self._seqs["prot"] = []
+
+        for eid in sorted( data.keys() ) :
+            if not "type" in data[eid].keys() : 
+#ERR: no molecule type
+                logging.error( "%s: no molecule type in entity %s" % (bmrbid,eid,) )
+                continue
+            if data[eid]["type"] is None : 
+#ERR: null molecule type
+                logging.error( "%s: NULL molecule type in entity %s" % (bmrbid,eid,) )
+                continue
+            if data[eid]["type"] in (".","?") : 
+#ERR: ditto
+                logging.error( "%s: molecule type is ./? in entity %s" % (bmrbid,eid,) )
+                continue
+
+            restype = None
+            if (data[eid]["type"].lower() == "protein") \
+            or (data[eid]["type"][:11].lower() == "polypeptide") :
+                restype = "prot"
+
+            elif (data[eid]["type"].lower() == "rna") \
+            or (data[eid]["type"].lower() == "polyribonucleotide") :
+                restype = "rna"
+
+            elif (data[eid]["type"].lower() == "dna") \
+            or (data[eid]["type"].lower() == "polydeoxyribonucleotide") :
+                restype = "dna"
+
+            if not restype in ("dna","prot","rna") :
+# skip
+                logging.debug( "%s: entity %s is not a polymer" % (bmrbid,eid,) )
+                continue
+
+            logging.debug( "** %s, entity %s, restype %s" % (bmrbid,eid,restype,) )
+            logging.debug( data[eid].keys() )
+
+            seq = ""
+            if "seq_can" in data[eid].keys() :
+                seq = self.fix_sequence( data[eid]["seq_can"], kind = restype )
+            if seq == "" :
+                if "seq" in data[eid].keys() :
+                    seq = self.fix_sequence( data[eid]["seq"], kind = restype )
+
+            if seq == "" : 
+#ERR(?) no sequence
+                logging.debug( "%s: entity %s has no sequence" % (bmrbid,eid,) )
+                continue
+
+            name = ""
+            if "name" in data[eid].keys() :
+                if data[eid]["name"] is not None :
+                    if not data[eid]["name"] in (".","?") :
+                        name = data[eid]["name"]
+# types
+#
+            seqstr = self.HEADER % (bmrbid,eid,name,)
+            seqstr += "\n"
+            seqstr += seq
+
+            self._seqs[restype].append( seqstr )
+
+        return
+
+    #
+    #
+    def fix_sequence( self, seq, kind = "prot" ) :
+        """upcase, replace "(ABC)" with "X", (re-)wrap at 80 chars"""
+
+        logging.debug( "fix %s sequence %s" % (kind, seq,) )
+        if not kind in ("dna", "prot", "rna") : return ""
+        if (seq is None) or (seq in (".","?",)) : return ""
+        rc = re.sub( r"\s+", "", seq )
+        rc = re.sub( r"(\(.+\))", "X", rc )
+        rc = rc.upper()
+
+# nucl. acid notation uses N for "any nucleotide, not a gap"
+# blast complains about Xes
+#
+        if kind in ("dna", "rns") : rc = rc.replace( "X", "N" )
+        rc = "\n".join( rc[i:i+80] for i in range( 0, len( rc ), 80 ) )
+        return rc
+
+    # wrapper that does cvs rm with unlink
+    # need this becasue a cron job does auto cvs add/cvs commit
+    # on all files in entrydir
+    #
+    def unlink( self, filename ) :
+
+        here = os.getcwd()
+        (where,name) = os.path.split( filename )
+        os.chdir( where )
+        cmd = ["cvs", "rm", name]
+        os.unlink( filename )
+        p = subprocess.Popen( cmd )
+        p.wait()
+
+        os.chdir( here )
+        if p.returncode == 0 : self._deleted += 1
+
+        return p.returncode
+
+    #
+    #
+    def update( self, sequences, outfile ) :
+        newstr = ""
+        for seq in sequences :
+            newstr += seq + "\n"
+        if len( newstr.strip() ) < 1 :
+            if os.path.exists( outfile ) :
+
+#FIXME: check 4 errs
+                self.unlink( outfile )
+            return
+
+        oldstr = ""
+        if os.path.exists( outfile ) :
+            with open( outfile, "rU" ) as f :
+                oldstr = f.read()
+
+# not updated?
+#
+        if oldstr == newstr :
+            return
+
+# still here?
+#
+        with open( outfile, "w" ) as f :
+            f.write( newstr )
+            self._updated += 1
+
 
 ########################################################
 #
@@ -150,10 +377,14 @@ class StarParser( sas.ContentHandler, sas.ErrorHandler ) :
             self._data[self._entityid]["type"] = val
 
         if (tag == "_Entity.Polymer_seq_one_letter_code_can") or (tag == "_Mol_residue_sequence") :
-            self._data[self._entityid]["seq_can"] = val.replace( "\n", "" ).replace( " ", "" )
+            seq = val.replace( "\n", "" ).replace( " ", "" ).strip()
+            if seq not in ("", "?", ".") :
+                self._data[self._entityid]["seq_can"] = seq
 
         if tag == "_Entity.Polymer_seq_one_letter_code" :
-            self._data[self._entityid]["seq"] = val.replace( "\n", "" ).replace( " ", "" )
+            seq = val.replace( "\n", "" ).replace( " ", "" ).strip()
+            if seq not in ("", "?", ".") :
+                self._data[self._entityid]["seq"] = seq
 
 # shortcut: natural source is mandatory & comes after entities -- stop parsing
 #
@@ -162,235 +393,35 @@ class StarParser( sas.ContentHandler, sas.ErrorHandler ) :
 
         return False
 
-# wrapper that does cvs rm with unlink
-#
-def unlink( filename, verbose = False ) :
-    if verbose : sys.stdout.write( "unlink( %s )\n" % (filename,) )
 
-    here = os.getcwd()
-    (where,name) = os.path.split( filename )
-    os.chdir( where )
-    cmd = ["cvs", "rm", name]
-    if verbose : pprint.pprint( cmd )
-    os.unlink( filename )
-    p = subprocess.Popen( cmd )
-    p.wait()
+#    ap = argparse.ArgumentParser( description = "read residue sequence(s) from NMR-STAR file" )
+#    ap.add_argument( "-v", "--verbose", help = "print lots of messages to stdout", dest = "verbose",
+#    action = "store_true", default = False )
+#    args = ap.parse_args( sys.argv[1:] )
 
-    if verbose : 
-        sys.stdout.write( "returned %d\n" % (p.returncode,) )
-
-    os.chdir( here )
-    return p.returncode
-
-#
-#
-def fix_sequence( seq, kind = "prot", verbose = False ) :
-    """upcase, replace "(ABC)" with "X", (re-)wrap at 80 chars"""
-    assert kind in ("prot","nucl")
-    if verbose : sys.stdout.write( "fix_sequence( %s )\n" % (seq,) )
-    if (seq is None) or (seq in (".","?",)) : return ""
-    rc = re.sub( r"\s+", "", seq )
-    rc = re.sub( r"(\(.+\))", "X", rc )
-    rc = rc.upper()
-
-# nucl. acid notation uses N for "any nucleotide, not a gap"
-# blast complains about Xes
-#
-    if kind == "nucl" : rc = rc.replace( "X", "N" )
-    rc = "\n".join( rc[i:i+80] for i in xrange( 0, len( rc ), 80 ) )
-    if verbose : sys.stdout.write( "fix_sequence()=%s\n" % (rc,) )
-    return rc
-
-# return values are dict { "err" : message } or { "upd" : N, "del" : M }
-#
-def update( bmrbid, verbose = False ) :
-    """read and udpate one BMRB entry"""
-    if verbose : sys.stdout.write( "update( %s )\n" % (bmrbid,) )
-    global ENTRYDIR   # = "/share/subedit/entries/bmr%s/clean"
-    global ENTRYFILE2 # = "bmr%s_21.str"
-    global ENTRYFILE3 # = "bmr%s_3.str"
-    global SEQFILE    #= "bmr%s.%s.fasta"
-    global HEADER     #= ">gnl|mdb|bmrb%s:%s %s"
-
-    infile = os.path.join( (ENTRYDIR % (bmrbid,)), (ENTRYFILE3 % (bmrbid,)) )
-    if not os.path.exists( infile ) :
-        infile = os.path.join( (ENTRYDIR % (bmrbid,)), (ENTRYFILE2 % (bmrbid,)) )
-
-# nag
-#
-        if os.path.exists( infile ) :
-            sys.stderr.write( "No 3.1 file for %s, using 2.1: %s\n" % (bmrbid,infile,) )
-        else :
-
-# not released yet ?
-#
-            if verbose :
-                sys.stdout.write( "no STAR file %s for %s\n" % (infile,bmrbid,) )
-            return { "err" : "File not found" }
-
-    data = StarParser.parse_file( filename = infile, verbose = verbose )
-    if data is None :
-        sys.stderr.write( "Errors parsing %s\n" % (infile,) )
-        return { "err" : "Parse error" }
-
-    if verbose :
-        sys.stdout.write( "Data:\n" )
-        pprint.pprint( data )
-# sort 'em out, they may be in any order
-#
-    rc = { "upd" : 0, "del" : 0 }
-    s = {}
-    s["rna"] = []
-    s["dna"] = []
-    s["prot"] = []
-
-    for eid in sorted( data.keys() ) :
-        if not "type" in data[eid].keys() : 
-            if verbose : sys.stdout.write( "No type in %s\n" % (bmrbid,) )
-            continue
-        if data[eid]["type"] is None : 
-            if verbose : sys.stdout.write( "No type in %s (none)\n" % (bmrbid,) )
-            continue
-        if data[eid]["type"] in (".","?") : 
-            if verbose : sys.stdout.write( "No type in %s (null)\n" % (bmrbid,) )
-            continue
-
-        restype = None
-        if (data[eid]["type"].lower() == "protein") \
-        or (data[eid]["type"][:11].lower() == "polypeptide") :
-            restype = "prot"
-
-        elif (data[eid]["type"].lower() == "rna") \
-        or (data[eid]["type"].lower() == "polyribonucleotide") :
-            restype = "nucl"
-
-        elif (data[eid]["type"].lower() == "dna") \
-        or (data[eid]["type"].lower() == "polydeoxyribonucleotide") :
-            restype = "nucl"
-
-        if not restype in ("prot","nucl") :
-            if verbose :
-                sys.stdout.write( "residue type is %s in %s:%s!\n" % (data[eid]["type"],bmrbid,eid,) )
-            continue
-
-        seq = ""
-        if "seq_can" in data[eid].keys() :
-            seq = fix_sequence( data[eid]["seq_can"], kind = restype, verbose = verbose )
-        if seq == "" :
-            if "seq" in data[eid].keys() :
-                seq = fix_sequence( data[eid]["seq"], kind = restype, verbose = verbose )
-
-        if seq == "" : 
-            if verbose : sys.stdout.write( "No sequence in %s\n" % (bmrbid,) )
-            continue
-
-        name = ""
-        if "name" in data[eid].keys() :
-            if data[eid]["name"] is not None :
-                if not data[eid]["name"] in (".","?") :
-                    name = data[eid]["name"]
-# types
-#
-        seqstr = HEADER % (bmrbid,eid,name,)
-        seqstr += "\n"
-        seqstr += seq
-
-        if (data[eid]["type"].lower() == "protein") \
-        or (data[eid]["type"][:11].lower() == "polypeptide") :
-            s["prot"].append( seqstr )
-
-        elif (data[eid]["type"].lower() == "rna") \
-        or (data[eid]["type"].lower() == "polyribonucleotide") :
-            s["rna"].append( seqstr )
-
-        elif (data[eid]["type"].lower() == "dna") \
-        or (data[eid]["type"].lower() == "polydeoxyribonucleotide") :
-            s["dna"].append( seqstr )
-
-#
-#
-    if verbose : pprint.pprint( s )
-    for t in ("prot","dna","rna") :
-        outname = SEQFILE % (bmrbid,t,)
-        outfile = os.path.join( (ENTRYDIR % (bmrbid,)), outname )
-
-        newstr = ""
-        for seq in s[t] :
-            newstr += seq + "\n"
-
-        if os.path.exists( outfile ) :
-
-            if len( newstr ) < 1 : 
-                if verbose :
-                    sys.stdout.write( "Deleting %s\n" % (outfile,) )
-                unlink( outfile )
-                rc["del"] += 1
-                continue
-
-            oldstr = ""
-            with open( outfile, "rU" ) as f :
-                oldstr = f.read()
-
-            if oldstr == newstr :
-                if verbose :
-                    sys.stdout.write( "Not updating %s: not changed\n" % (outfile,) )
-                continue
-
-        else :
-            if len( newstr ) < 1 : 
-                continue
-
-        with open( outfile, "w" ) as f :
-            if verbose :
-                sys.stdout.write( "Updating %s\n" % (outfile,) )
-            f.write( newstr )
-            rc["upd"] += 1
-
-    return rc
-
-# because setuptools won't run __main__
-#
-def main() :
-
-    ap = argparse.ArgumentParser( description = "read residue sequence(s) from NMR-STAR file" )
-    ap.add_argument( "-v", "--verbose", help = "print lots of messages to stdout", dest = "verbose",
-        action = "store_true", default = False )
-
-    args = ap.parse_args( sys.argv[1:] )
-
-    pat = re.compile( r"bmr(\d+)$" )
-    updated = 0
-    deleted = 0
-    errors = 0
-    total = 0
-    for d in glob.glob( os.path.join( ENTRYROOT, "*" ) ) :
-        m = pat.search( d )
-        if not m :
-            sys.stderr.write( "%s does not match pattern\n" % (d,) )
-            continue
-        bmrbid = m.group( 1 )
-        total += 1
-        ret = update( bmrbid, verbose = args.verbose )
-        if "err" in ret.keys() : 
-            if ret["err"] != "File not found" : # probably unreleased
-                errors += 1
-        if "upd" in ret.keys() : updated += ret["upd"]
-        if "del" in ret.keys() : deleted += ret["del"]
-
-#        sys.stdout.write( ">%s:\n" % (bmrbid,) )
-#        pprint.pprint( ret )
-
-        ret.clear()
-
-    sys.stdout.write( "%d entries processed, %d errors, %d sequence files updated, %d deleted\n" \
-            % (total, errors, updated, deleted,) )
 
 #
 #
 #
 if __name__ == "__main__" :
 
-    main()
+    par = argparse.ArgumentParser( description = "get sequence" )
+    par.add_argument( "-i", "--bmrbid", dest = "bmrbid" )
+    par.add_argument( "-v", "--verbose", dest = "verbose", default = False, action = "store_true" )
+    args = par.parse_args()
+
+    logging.basicConfig( level = args.verbose and logging.DEBUG or logging.INFO,
+        format = "%(asctime)s %(message)s",
+        handlers = [ logging.StreamHandler( sys.stdout ) ] )
+
+    if args.bmrbid is None :
+        obj = Getsequence.runall()
+    else :
+        obj = Getsequence.runone( args.bmrbid )
+
+    logging.info( "%d entries processed, %d errors, %d sequence files updated, %d deleted\n" \
+            % (obj._total, obj._errors, obj._updated, obj._deleted,) )
+
 
 #
 # eof
