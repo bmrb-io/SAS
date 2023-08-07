@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 #
 # Extract residue sequences from BMRB entries
 # and save them in SEQFILE(s) in FASTA format.
@@ -20,10 +20,10 @@
 import os
 import sys
 import re
-import pprint
 import subprocess
 import argparse
 import glob
+import logging
 
 _UP = os.path.realpath( os.path.join( os.path.split( __file__ )[0], ".." ) )
 sys.path.append( _UP )
@@ -36,8 +36,8 @@ class Getsequence( object ) :
 
 # files are in ${ENTRYDIR}/bmr${ID}/clean/bmr${ID}_[3|21].str
 #
-    ENTRYDIR = "/projects/BRMB/private/entrydirs/macromolecules"
-    CLEANDIR = "%s/clean"
+    ENTRYDIR = "/projects/BMRB/private/entrydirs/macromolecules"
+    CLEANDIR = "clean"
     ENTRYFILE2 = "bmr%s_21.str"
     ENTRYFILE3 = "bmr%s_3.str"
 
@@ -54,61 +54,77 @@ class Getsequence( object ) :
     #
     @classmethod
     def runall( cls ) :
+        logging.debug( "* runall *" )
         obj = cls()
-        for d in glob.glob( os.path.join( cls.ENTRYDIR, "bmr*" ) ) :
-            m = cls._pat.search( d )
+        entrydir = os.path.join( cls.ENTRYDIR, "bmr*" )
+        logging.debug( "** %s *" % (entrydir,) )
+        for d in sorted( glob.glob( entrydir ) ) :
+            logging.debug( "** %s **" % (d,) )
+            m = obj._pat.search( d )
             if not m :
-#            sys.stderr.write( "%s does not match pattern\n" % (d,) )
+                logging.info( "%s does not match pattern" % (d,) )
                 continue
 
-            obj.getsequence( m.group( 1 ) )
+            obj.getsequence( d, m.group( 1 ) )
 
         return obj
 
     #
     #
-    def init( self ) :
-        _pat = re.compile( r"bmr(\d+)$" )
-        _seqs = {}
+    @classmethod
+    def runone( cls, bmrbid ) :
+        logging.debug( "* run one %s *" % (bmrbid,) )
+        obj = cls()
+        entrydir = os.path.join( cls.ENTRYDIR, "bmr%s" % (bmrbid,) )
+        logging.debug( "** %s *" % (entrydir,) )
+        if os.path.isdir( entrydir ) :
+            obj.getsequence( entrydir, bmrbid )
+
+        return obj
+
+    #
+    #
+    def __init__( self ) :
+        self._pat = re.compile( r"bmr(\d+)$" )
+        self._seqs = {}
 
 # these are sequence files
-        _updated = 0
-        _deleted = 0
+        self._updated = 0
+        self._deleted = 0
 
 # and these are entries
-        _errors = 0
-        _total = 0
+        self._errors = 0
+        self._total = 0
 
     #
     #
-    @property
-    def sequences( self ) :
-        return self._seqs
-
-    #
-    #
-    def getsequence( self, bmrbid ) :
+    def getsequence( self, entrydir, bmrbid ) :
         self._total += 1
-        entryfile = os.path.join( self.CLEANDIR % (bmrbid,), self.ENTRYFILE3 % (bmrbid,) )
+        entryfile = os.path.join( entrydir, self.CLEANDIR, self.ENTRYFILE3 % (bmrbid,) )
         if not os.path.exists( entryfile ) :
-            entryfile = os.path.join( self.CLEANDIR % (bmrbid,), self.ENTRYFILE2 % (bmrbid,) )
+            logging.info( "No 3.1 file for %s: %s" % (bmrbid, entryfile,) )
+            entryfile = os.path.join( entrydir, self.CLEANDIR, self.ENTRYFILE2 % (bmrbid,) )
 
 # not released?
 #
         if not os.path.exists( entryfile ) :
+            logging.info( "%s: no entry file %s" % (bmrbid, entryfile) )
             return
 
         self.parse( entryfile, bmrbid )
+        logging.debug( self._seqs )
 
 # got sequences ?
 #
         for i in ("dna", "prot", "rna") :
-            outfile = os.path.join( self.CLEANDIR % (bmrbid,), self.SEQFILE % (bmrbid,i,) )
+            outfile = os.path.join( entrydir, self.CLEANDIR, self.SEQFILE % (bmrbid,i,) )
             if os.path.exists( outfile ) :
                 if len( self._seqs[i] ) < 1 :
 
+                    logging.debug( "%s: no %s sequence but file exists; deleting" % (bmrbid,i,) )
 #FIXME: check 4 errs
-                    self.unlink( outfile )
+                    if( self.unlink( outfile ) != 1 ) :
+                        logging.error( "can't delete %s" % (outfile,) )
                     continue
 
             self.update( self._seqs[i], outfile )
@@ -119,6 +135,7 @@ class Getsequence( object ) :
 
         self._seqs.clear()
         data = StarParser.parse_file( entryfile )
+        logging.debug( data )
         if data is None :
             self._errors += 1
             return
@@ -130,12 +147,15 @@ class Getsequence( object ) :
         for eid in sorted( data.keys() ) :
             if not "type" in data[eid].keys() : 
 #ERR: no molecule type
+                logging.error( "%s: no molecule type in entity %s" % (bmrbid,eid,) )
                 continue
             if data[eid]["type"] is None : 
 #ERR: null molecule type
+                logging.error( "%s: NULL molecule type in entity %s" % (bmrbid,eid,) )
                 continue
             if data[eid]["type"] in (".","?") : 
 #ERR: ditto
+                logging.error( "%s: molecule type is ./? in entity %s" % (bmrbid,eid,) )
                 continue
 
             restype = None
@@ -153,7 +173,11 @@ class Getsequence( object ) :
 
             if not restype in ("dna","prot","rna") :
 # skip
+                logging.debug( "%s: entity %s is not a polymer" % (bmrbid,eid,) )
                 continue
+
+            logging.debug( "** %s, entity %s, restype %s" % (bmrbid,eid,restype,) )
+            logging.debug( data[eid].keys() )
 
             seq = ""
             if "seq_can" in data[eid].keys() :
@@ -164,6 +188,7 @@ class Getsequence( object ) :
 
             if seq == "" : 
 #ERR(?) no sequence
+                logging.debug( "%s: entity %s has no sequence" % (bmrbid,eid,) )
                 continue
 
             name = ""
@@ -173,26 +198,20 @@ class Getsequence( object ) :
                         name = data[eid]["name"]
 # types
 #
-            seqstr = HEADER % (bmrbid,eid,name,)
+            seqstr = self.HEADER % (bmrbid,eid,name,)
             seqstr += "\n"
             seqstr += seq
 
-            if restype == "prot" :
-                self._seqs["prot"].append( seqstr )
+            self._seqs[restype].append( seqstr )
 
-            elif restype == "rna" :
-                self._seqs["rna"].append( seqstr )
-
-            elif restype == "dna" :
-                self._seqs["dna"].append( seqstr )
-
-            return
+        return
 
     #
     #
     def fix_sequence( self, seq, kind = "prot" ) :
         """upcase, replace "(ABC)" with "X", (re-)wrap at 80 chars"""
 
+        logging.debug( "fix %s sequence %s" % (kind, seq,) )
         if not kind in ("dna", "prot", "rna") : return ""
         if (seq is None) or (seq in (".","?",)) : return ""
         rc = re.sub( r"\s+", "", seq )
@@ -203,7 +222,7 @@ class Getsequence( object ) :
 # blast complains about Xes
 #
         if kind in ("dna", "rns") : rc = rc.replace( "X", "N" )
-        rc = "\n".join( rc[i:i+80] for i in xrange( 0, len( rc ), 80 ) )
+        rc = "\n".join( rc[i:i+80] for i in range( 0, len( rc ), 80 ) )
         return rc
 
     # wrapper that does cvs rm with unlink
@@ -229,7 +248,7 @@ class Getsequence( object ) :
     #
     def update( self, sequences, outfile ) :
         newstr = ""
-        for seq in self._seqs[t] :
+        for seq in sequences :
             newstr += seq + "\n"
         if len( newstr.strip() ) < 1 :
             if os.path.exists( outfile ) :
@@ -358,10 +377,14 @@ class StarParser( sas.ContentHandler, sas.ErrorHandler ) :
             self._data[self._entityid]["type"] = val
 
         if (tag == "_Entity.Polymer_seq_one_letter_code_can") or (tag == "_Mol_residue_sequence") :
-            self._data[self._entityid]["seq_can"] = val.replace( "\n", "" ).replace( " ", "" )
+            seq = val.replace( "\n", "" ).replace( " ", "" ).strip()
+            if seq not in ("", "?", ".") :
+                self._data[self._entityid]["seq_can"] = seq
 
         if tag == "_Entity.Polymer_seq_one_letter_code" :
-            self._data[self._entityid]["seq"] = val.replace( "\n", "" ).replace( " ", "" )
+            seq = val.replace( "\n", "" ).replace( " ", "" ).strip()
+            if seq not in ("", "?", ".") :
+                self._data[self._entityid]["seq"] = seq
 
 # shortcut: natural source is mandatory & comes after entities -- stop parsing
 #
@@ -382,9 +405,23 @@ class StarParser( sas.ContentHandler, sas.ErrorHandler ) :
 #
 if __name__ == "__main__" :
 
-    obj = Getsequence.runall()
-    sys.stdout.write( "%d entries processed, %d errors, %d sequence files updated, %d deleted\n" \
+    par = argparse.ArgumentParser( description = "get sequence" )
+    par.add_argument( "-i", "--bmrbid", dest = "bmrbid" )
+    par.add_argument( "-v", "--verbose", dest = "verbose", default = False, action = "store_true" )
+    args = par.parse_args()
+
+    logging.basicConfig( level = args.verbose and logging.DEBUG or logging.INFO,
+        format = "%(asctime)s %(message)s",
+        handlers = [ logging.StreamHandler( sys.stdout ) ] )
+
+    if args.bmrbid is None :
+        obj = Getsequence.runall()
+    else :
+        obj = Getsequence.runone( args.bmrbid )
+
+    logging.info( "%d entries processed, %d errors, %d sequence files updated, %d deleted\n" \
             % (obj._total, obj._errors, obj._updated, obj._deleted,) )
+
 
 #
 # eof

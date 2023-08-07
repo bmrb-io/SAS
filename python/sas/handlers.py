@@ -8,7 +8,6 @@
 #
 # Most content handler callbacks below simply raise "Abstract method called".
 #
-from __future__ import absolute_import
 import sys
 import abc
 
