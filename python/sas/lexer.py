@@ -620,7 +620,6 @@ class StarLexer( object ) :
         """buffering input reader: reads lines until the buffer is greater than _bufsize,
             then yields the buffer."""
         if self._verbose : sys.stdout.write( self.__class__.__name__ + "._input_reader()\n" )
-        assert isinstance( self._fp, file )
         buf = ""
         for line in self._fp :
             buf += line
