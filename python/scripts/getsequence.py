@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 #
 # Extract residue sequences from BMRB entries
 # and save them in SEQFILE(s) in FASTA format.
@@ -123,7 +123,7 @@ class Getsequence( object ) :
 
                     logging.debug( "%s: no %s sequence but file exists; deleting" % (bmrbid,i,) )
 #FIXME: check 4 errs
-                    if( self.unlink( outfile ) != 1 ) :
+                    if self.unlink(outfile) != 1:
                         logging.error( "can't delete %s" % (outfile,) )
                     continue
 

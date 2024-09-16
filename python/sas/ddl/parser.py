@@ -1,7 +1,7 @@
 #!/usr/bin/python -u
 #
 #
-from __future__ import absolute_import
+
 
 import sys
 import os
@@ -93,11 +93,11 @@ class Parser( sas.ParserBase ) :
                 self._eh.fatalError( line = ln, msg = "EOF in delimited value" )
                 stop = True
 
-        except sas.SasException, e :
+        except sas.SasException as e:
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             stop = True
 
-        return (val, stop)
+        return val, stop
 
     # top-level parse does not return anything
     #
@@ -137,7 +137,7 @@ class Parser( sas.ParserBase ) :
                 self._ch.endData( line = ln, name = self._data_name )
 
 
-        except sas.SasException, e :
+        except sas.SasException as e:
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return
 
@@ -254,7 +254,7 @@ class Parser( sas.ParserBase ) :
                 self._ch.endData( line = ln, name = self._data_name )
                 return True
 
-        except sas.SasException, e :
+        except sas.SasException as e:
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 
@@ -356,7 +356,7 @@ class Parser( sas.ParserBase ) :
                 self._eh.fatalError( line = ln, msg = "premature EOF (no closing save_)" )
                 return True
 
-        except sas.SasException, e :
+        except sas.SasException as e:
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 
@@ -432,7 +432,7 @@ class Parser( sas.ParserBase ) :
                     return False
 
                 if token.type in ("SAVEEND", "LOOPSTART") :
-#                    print "* got here"
+#                    print("* got here")
                     if reading_tags :
                         if len( tags ) < 1 :
                             if self._eh.error( line = token.lineno, msg = "Loop with no tags" ) :
@@ -447,12 +447,14 @@ class Parser( sas.ParserBase ) :
                     if self._ch.endLoop( line = token.lineno ) :
                         return True
 
-#                    print "** got here"
+#                    print("** got here")
 # push back "save_" or "loop_" to re-trigger in the caller 
 #
 #                    if token.type == "SAVEEND" :
-#                        print "***", token.value
-#                        print "***", len( token.value )
+#                        print("***", token.value)
+
+#                        print("***", len( token.value ))
+
 #                        token.lexer.lexpos -= len( str( token.value ) )
 #                    elif token.type == "LOOPSTART" :
 #
@@ -561,7 +563,7 @@ class Parser( sas.ParserBase ) :
                 self._ch.endData( line = ln, name = self._data_name )
                 return True
 
-        except sas.SasException, e :
+        except sas.SasException as e:
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 

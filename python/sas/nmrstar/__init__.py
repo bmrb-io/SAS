@@ -31,7 +31,7 @@
 # Incoming tokens are ``ply.LexToken( type, value, lineno, lexpos )``
 #
 
-from __future__ import absolute_import
+
 
 from .sansparser import SansParser
 from .nvparser import Parser

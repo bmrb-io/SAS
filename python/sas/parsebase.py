@@ -1,7 +1,7 @@
 #!/usr/bin/python -u
 #
 #
-from __future__ import absolute_import
+
 
 import sys
 import os
@@ -71,7 +71,7 @@ class ParserBase( object ) :
         return parser
 
     @abc.abstractmethod
-    def _parse_file() :
+    def _parse_file(self) :
         raise Exception( "Abstract method called" )
 
 ###################################################################################################

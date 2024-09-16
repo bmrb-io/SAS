@@ -44,7 +44,7 @@ STAR references:
 
 """
 
-from __future__ import absolute_import
+
 
 import sys
 import os
@@ -398,7 +398,7 @@ class StarLexer( object ) :
         r";"
         if self._verbose :
             sys.stdout.write( "Semicolon in line %d\n" % (t.lexer.lineno,) )
-#            print ">>> lexpos=", t.lexer.lexpos, ":", t.lexer.lexdata[t.lexer.lexpos - 2], ":"
+#            print(">>> lexpos=", t.lexer.lexpos, ":", t.lexer.lexdata[t.lexer.lexpos - 2], ":")
 
 # start of chunk or lookbehind
 #  lexpos is after the match

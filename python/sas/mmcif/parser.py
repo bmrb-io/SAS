@@ -1,6 +1,6 @@
 #!/usr/bin/python -u
 
-from __future__ import absolute_import
+
 
 import sys
 import os
@@ -91,11 +91,11 @@ class CifParser( sas.ParserBase ) :
                 self._eh.fatalError( line = ln, msg = "EOF in delimited value" )
                 stop = True
 
-        except sas.SasException, e :
+        except sas.SasException as e:
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             stop = True
 
-        return (val, stop)
+        return val, stop
 
     # top-level parse does not return anything
     #
@@ -136,7 +136,7 @@ class CifParser( sas.ParserBase ) :
                 self._ch.endData( line = ln, name = self._data_name )
                 return
 
-        except sas.SasException, e :
+        except sas.SasException as e:
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return
 
@@ -223,7 +223,7 @@ class CifParser( sas.ParserBase ) :
                 self._ch.endData( line = ln, name = self._data_name )
                 return True
 
-        except sas.SasException, e :
+        except sas.SasException as e:
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 
@@ -361,7 +361,7 @@ class CifParser( sas.ParserBase ) :
                 self._ch.endData( line = ln, name = self._data_name )
                 return True
 
-        except sas.SasException, e :
+        except sas.SasException as e:
             self._eh.fatalError( line = e._line, msg = "Lexer error: " + str( e._msg ) )
             return True
 

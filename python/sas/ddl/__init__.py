@@ -40,7 +40,7 @@
 # Incoming tokens are ``ply.LexToken( type, value, lineno, lexpos )``
 #
 
-from __future__ import absolute_import
+
 
 from .parser import Parser as DdlParser
 

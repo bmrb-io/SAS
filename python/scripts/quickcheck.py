@@ -3,7 +3,7 @@
 # quick STAR syntax & keyword check
 #
 
-from __future__ import absolute_import
+
 
 import sys
 import os
@@ -34,7 +34,7 @@ class QuickCheck( sas.ContentHandler, sas.ErrorHandler ) :
         chk = cls( dictionary )
         lex =  sas.StarLexer( fp, bufsize = 0, verbose = verbose )
         p = sas.SansParser.parse( lexer = lex, content_handler = chk, error_handler = chk, verbose = verbose )
-        return (not chk._errs)
+        return not chk._errs
 
     @classmethod
     def check_nmr_star_file( cls, filename, dictionary = None, verbose = False ) :
