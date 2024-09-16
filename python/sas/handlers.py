@@ -15,7 +15,7 @@ import abc
 # fatal error terminates parsing, but error and warning don't have to.
 # override them to return False and keep going (use at own risk!)
 #
-class ErrorHandler :
+class ErrorHandler(metaclass=abc.ABCMeta) :
     """
     Error handlers are common to all parser versions.
 
@@ -24,7 +24,6 @@ class ErrorHandler :
     Non-fatal error and warning callbacks may return ``False`` to continue parsing
     (use at own risk, of course).
     """
-    __metaclass__ = abc.ABCMeta
     def fatalError( self, line, msg ) :
         sys.stderr.write("critical parse error in line %s: %s\n" % (line, msg))
     def error( self, line, msg ) :
@@ -36,12 +35,10 @@ class ErrorHandler :
 
 # base class for content handlers
 #
-class ContentHandlerBase :
+class ContentHandlerBase(metaclass=abc.ABCMeta) :
     """
     Methods common to all content handlers
     """
-
-    __metaclass__ = abc.ABCMeta
 
     # not abstract because global blocks aren't used in mmcif or nmr-star
     #

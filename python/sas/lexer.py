@@ -612,7 +612,7 @@ class StarLexer( object ) :
     # py3 compat.
     #
     def __next__( self ) :
-        return self.next()
+        return next(self)
 
     # generator: reads the next chunk of input and feeds it to the lexer
     #
@@ -638,7 +638,7 @@ class StarLexer( object ) :
 
     #
     #
-    def next( self ) :
+    def __next__( self ) :
         """returns the next lexer token"""
         if self._verbose : sys.stdout.write( self.__class__.__name__ + ".next()\n" )
 
@@ -656,7 +656,7 @@ class StarLexer( object ) :
 
 # or else bite off a chunk ourselves
 #
-            else : inp.next()
+            else : next(inp)
 
 #        sys.stderr.write( "LEX: before token, lexdata is |%s|\n" % (self.lexer.lexdata,) )
         rc = self.lexer.token()
@@ -665,7 +665,7 @@ class StarLexer( object ) :
 #        sys.stderr.write( "LEX: after token, lexdata is |%s|\n" % (self.lexer.lexdata,) )
         if rc is None :
             if self._fp is None : raise StopIteration
-            else : inp.next()
+            else : next(inp)
             rc = self.lexer.token()
 
 # if it's none again, we're done

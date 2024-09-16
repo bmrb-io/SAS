@@ -145,7 +145,7 @@ class Getsequence( object ) :
         self._seqs["prot"] = []
 
         for eid in sorted( data.keys() ) :
-            if not "type" in data[eid].keys() : 
+            if not "type" in list(data[eid].keys()) : 
 #ERR: no molecule type
                 logging.error( "%s: no molecule type in entity %s" % (bmrbid,eid,) )
                 continue
@@ -177,13 +177,13 @@ class Getsequence( object ) :
                 continue
 
             logging.debug( "** %s, entity %s, restype %s" % (bmrbid,eid,restype,) )
-            logging.debug( data[eid].keys() )
+            logging.debug( list(data[eid].keys()) )
 
             seq = ""
-            if "seq_can" in data[eid].keys() :
+            if "seq_can" in list(data[eid].keys()) :
                 seq = self.fix_sequence( data[eid]["seq_can"], kind = restype )
             if seq == "" :
-                if "seq" in data[eid].keys() :
+                if "seq" in list(data[eid].keys()) :
                     seq = self.fix_sequence( data[eid]["seq"], kind = restype )
 
             if seq == "" : 
@@ -192,7 +192,7 @@ class Getsequence( object ) :
                 continue
 
             name = ""
-            if "name" in data[eid].keys() :
+            if "name" in list(data[eid].keys()) :
                 if data[eid]["name"] is not None :
                     if not data[eid]["name"] in (".","?") :
                         name = data[eid]["name"]
@@ -355,7 +355,7 @@ class StarParser( sas.ContentHandler, sas.ErrorHandler ) :
 #
         if tag == "_Entity.ID" :
             self._entityid = val
-            if not val in self._data.keys() :
+            if not val in list(self._data.keys()) :
                 self._data[val] = {}
         if tag == "_Entity.Name" :
             self._data[self._entityid]["name"] = str( val ).replace( "\n", " " ).strip()

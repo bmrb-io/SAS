@@ -14,13 +14,11 @@ import sas
 
 # base interface for SAS parsers
 #
-class ParserBase( object ) :
+class ParserBase( object, metaclass=abc.ABCMeta ) :
 
     """
     Parser for STAR file.
     """
-
-    __metaclass__ = abc.ABCMeta
 
     #
     #
