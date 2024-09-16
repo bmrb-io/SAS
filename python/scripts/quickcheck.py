@@ -39,7 +39,7 @@ class QuickCheck( sas.ContentHandler, sas.ErrorHandler ) :
     @classmethod
     def check_nmr_star_file( cls, filename, dictionary = None, verbose = False ) :
         rc = False
-        with open( filename, "rU" ) as fp :
+        with open(filename, "r") as fp:
             rc = cls.check_nmr_star( fp, dictionary, verbose )
         return rc
 
@@ -107,7 +107,7 @@ if __name__ == "__main__" :
 
     taglist = set()
     if dictfile is not None :
-        with open( dictfile, "rU" ) as f :
+        with open(dictfile, "r") as f:
             for line in f :
                 tag = line.strip()
                 if (tag[0] == "'") and (tag[-1] == "'" ) :

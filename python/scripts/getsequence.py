@@ -259,7 +259,7 @@ class Getsequence( object ) :
 
         oldstr = ""
         if os.path.exists( outfile ) :
-            with open( outfile, "rU" ) as f :
+            with open(outfile, "r") as f:
                 oldstr = f.read()
 
 # not updated?
@@ -302,7 +302,7 @@ class StarParser( sas.ContentHandler, sas.ErrorHandler ) :
 
     @classmethod
     def parse_file( cls, filename, verbose = False ) :
-        with open( filename, "rU" ) as f :
+        with open(filename, "r") as f:
             return cls.parse( fp = f, verbose = verbose )
 
     def __init__( self ) :
