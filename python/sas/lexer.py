@@ -622,7 +622,7 @@ class StarLexer( object ) :
         if self._verbose : sys.stdout.write( self.__class__.__name__ + "._input_reader()\n" )
         buf = ""
         for line in self._fp :
-            buf += line
+            buf += line.decode()
             if len( buf ) >= self._bufsize :
                 self.lexer.input( buf )
 #                sys.stderr.write( "INP: buf is |%s|\n" % (buf,) )
