@@ -1,7 +1,12 @@
 #!/usr/bin/python -u
 #
 
+from importlib.metadata import version, PackageNotFoundError
 
+try:
+    __version__ = version("bmrb-sas")
+except PackageNotFoundError:
+    __version__ = "unknown"
 
 #
 #
@@ -70,7 +75,7 @@ TOKENS = {
 }
 
 #
-__all__ = ["TOKENS", "KEYWORDS", "SasException",
+__all__ = ["__version__", "TOKENS", "KEYWORDS", "SasException",
     "ContentHandlerBase", "ParserBase",
     "StarLexer",
     "ErrorHandler", "ContentHandler", "ContentHandler2", "SasContentHandler",

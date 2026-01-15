@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bmrb-sas"
+version = "1.0.0"
+description = "Simple API for STAR (Self-describing Text Archive and Retrieval) format"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    {name = "BMRB", email = "help@bmrb.io"}
+]
+keywords = ["STAR", "NMR-STAR", "mmCIF", "CIF", "parser", "BMRB"]
+dependencies = [
+    "ply>3.10,<3.12",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+
+[project.urls]
+Homepage = "https://github.com/bmrb-io/sas"
+Repository = "https://github.com/bmrb-io/sas"
+Documentation = "https://github.com/bmrb-io/sas"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sas*"]
